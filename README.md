@@ -1,50 +1,23 @@
-# React + TypeScript + Vite
+# VerAnon Admin UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Purpose
 
-Currently, two official plugins are available:
+The VerAnon Admin UI provides a web interface for manual protocol operations, serving both identity managers and service providers. While automated solutions may be preferred in production environments, this interface ensures direct protocol accessibility and operational visibility.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### For Identity Managers
 
-## Expanding the ESLint configuration
+- Monitor group metrics and membership
+- Verify individual identity commitment status and addition dates
+- Process user requests through commitment management (add/remove/update)
+- View subscriber details and account information
+- Adjust fee structures
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### For Service Providers
 
-- Configure the top-level `parserOptions` property like this:
+- Track user verification status across account set
+- Adjust approved identity managers
+- Access account details including approved manager relationships
+- View and verify manager credentials and reputation
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+This interface serves as an essential tool for protocol participants to maintain oversight of their operations and execute manual interventions when needed.
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
