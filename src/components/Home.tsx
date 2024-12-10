@@ -2,7 +2,7 @@ import { Button } from "./ui/button"
 
 export function Home() {
   return (
-    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] py-10">
+    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center py-24">
       {/* Hero Section */}
       <div className="flex flex-col items-center text-center space-y-4 mb-12">
         <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">
