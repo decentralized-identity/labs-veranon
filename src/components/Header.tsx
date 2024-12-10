@@ -1,5 +1,5 @@
-import { Button } from "./ui/button"
 import { Link } from "react-router-dom"
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 export function Header() {
   return (
@@ -21,11 +21,11 @@ export function Header() {
             </Link>
           </nav>
         </div>
-
-        {/* Wallet Connect Button */}
-        <Button variant="ghost" size="sm">
+        {/* <Button variant="ghost" size="sm">
           Connect Wallet
-        </Button>
+        </Button> */}
+        {/* Replace Button with RainbowKit ConnectButton */}
+        <ConnectButton />
       </div>
     </header>
   )
