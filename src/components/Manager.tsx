@@ -1,12 +1,26 @@
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { GroupOverview } from "./manager/GroupOverview"
 import { QuickActions } from "./manager/QuickActions"
 import { ActivityFeed } from "./manager/ActivityFeed"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { Skeleton } from "./ui/skeleton"
+import { RegisterManager } from "./manager/RegisterManager"
+import { CONTRACT_ADDRESSES } from "../contracts/addresses"
+import { abi } from "../contracts/artifacts/Manager.json"
+
+type ManagerData = {
+  isRegistered: boolean;
+}
 
 export function Manager() {
-  const { status } = useAccount()
+  const { address, status } = useAccount()
+  
+  const { data: managerData, isLoading: isLoadingManager } = useReadContract({
+    address: CONTRACT_ADDRESSES.MANAGER,
+    abi,
+    functionName: 'managers',
+    args: address ? [address] : undefined,
+  }) as { data: ManagerData | undefined, isLoading: boolean }
 
   // Show connect wallet prompt if not connected
   if (status === 'disconnected') {
@@ -24,8 +38,8 @@ export function Manager() {
     )
   }
 
-  // Show loading state while connecting
-  if (status === 'connecting') {
+  // Show loading state while connecting or fetching manager data
+  if (status === 'connecting' || isLoadingManager) {
     return (
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
@@ -40,7 +54,16 @@ export function Manager() {
     )
   }
 
-  // Show manager dashboard if connected
+  // Show registration UI if not registered
+  if (!managerData?.isRegistered) {
+    return (
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <RegisterManager />
+      </div>
+    )
+  }
+
+  // Show manager dashboard if connected and registered
   return (
     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <GroupOverview />
