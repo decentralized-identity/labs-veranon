@@ -10,6 +10,7 @@ import { abi } from "../contracts/artifacts/Manager.json"
 
 type ManagerData = {
   isRegistered: boolean;
+  groupId: bigint;
 }
 
 export function Manager() {
@@ -66,7 +67,7 @@ export function Manager() {
   // Show manager dashboard if connected and registered
   return (
     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <GroupOverview />
+      <GroupOverview groupId={managerData ? Number(managerData.groupId) : 0} />
       <QuickActions />
       <ActivityFeed />
     </div>
