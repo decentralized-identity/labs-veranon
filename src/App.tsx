@@ -3,6 +3,7 @@ import { Header } from "./components/Header"
 import { Home } from "./components/Home"
 import { Manager } from "./components/Manager"
 import { Provider } from "./components/Provider"
+import { MembersManagement } from "./components/manager/MembersManagement"
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/manager" element={<Manager />} />
+            <Route path="/manager/members" element={<MembersManagement />} />
             <Route path="/provider" element={<Provider />} />
           </Routes>
         </main>

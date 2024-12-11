@@ -1,6 +1,7 @@
 import { Button } from "../ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { UserPlus } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export function QuickActions() {
   return (
@@ -11,11 +12,13 @@ export function QuickActions() {
           <CardDescription>Add or remove members from your group</CardDescription>
         </CardHeader>
         <CardContent className="flex gap-4">
-          <Button>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Members
+          <Button asChild>
+            <Link to="/manager/members">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Update Members
+            </Link>
           </Button>
-          <Button variant="outline">View All Members</Button>
+          {/* <Button variant="outline">View All Members</Button> */}
         </CardContent>
       </Card>
 
