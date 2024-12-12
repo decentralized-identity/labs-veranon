@@ -1,24 +1,27 @@
-import { useReadContract } from 'wagmi'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Users, Shield, ArrowLeftRight } from "lucide-react"
-import { CONTRACT_ADDRESSES } from "../../contracts/addresses"
-import { abi } from "../../contracts/artifacts/Manager.json"
+import { GroupUtils } from "../../lib/groupUtils"
 
 type GroupOverviewProps = {
   groupId: number;
 }
 
 export function GroupOverview({ groupId }: GroupOverviewProps) {
-  // Get total members using getMerkleTreeSize
-  const { data: totalMembers } = useReadContract({
-    address: CONTRACT_ADDRESSES.MANAGER,
-    abi,
-    functionName: 'getMerkleTreeSize',
-    args: [BigInt(groupId)],
-  }) as { data: bigint | undefined }
+  const [memberCount, setMemberCount] = useState<number>(0)
 
-  // Convert BigInt to number for display
-  const memberCount = totalMembers ? Number(totalMembers) : 0
+  useEffect(() => {
+    const fetchMemberCount = async () => {
+      try {
+        const count = await GroupUtils.getActiveMemberCount(groupId)
+        setMemberCount(count)
+      } catch (error) {
+        console.error('Error fetching member count:', error)
+      }
+    }
+
+    fetchMemberCount()
+  }, [groupId])
 
   return (
     <Card className="mb-8">
