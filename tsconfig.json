@@ -5,8 +5,11 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
-    }
+      ],
+    },
+    "moduleResolution": "node",
+    "allowJs": true,
+    "esModuleInterop": true
   },
   "include": [
     "**/*.ts",
