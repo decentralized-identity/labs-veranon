@@ -1,45 +1,122 @@
+// app/(tabs)/verify.tsx
 import { Text, View, Pressable } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useRef, useState } from 'react';
+import { createWitnessInput } from '../../utils/createProof';
+import { witnessCalculatorCode } from '@/utils/witnessCalculator';
 
 export default function Verify() {
   const webviewRef = useRef<WebView>(null);
-  const [witness, setWitness] = useState<string | null>(null);
+  const [witnessStatus, setWitnessStatus] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const htmlContent = `
-    <html>
-      <head>
-        <script src="https://unpkg.com/snarkjs@latest/dist/snarkjs.min.js"></script>
-      </head>
-      <body>
-        <script>
-          async function generateWitness() {
-            try {
-              // snarkjs.wtns.calculate()
-              const mockWitness = { witness: "witness" };
-              window.ReactNativeWebView.postMessage(JSON.stringify(mockWitness));
-            } catch (error) {
-              window.ReactNativeWebView.postMessage(JSON.stringify({ error: error.message }));
-            }
+  <html>
+    <head>
+      <script>
+        ${witnessCalculatorCode}
+
+        async function generateWitness(wasmBase64, input) {
+          try {
+            // Convert base64 WASM to ArrayBuffer
+            const binary = base64ToArrayBuffer(wasmBase64);
+            
+            // Build the witness calculator
+            const witnessCalculator = await builder(binary);
+            
+            // Calculate the witness
+            const witness = await witnessCalculator.calculateWTNSBin(input);
+            
+            // Convert witness to base64 for transfer
+            const witnessBase64 = arrayBufferToBase64(witness);
+            
+            // Send result back to React Native
+            window.ReactNativeWebView.postMessage(JSON.stringify({ witness: witnessBase64 }));
+          } catch (err) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({ 
+              error: err.message,
+              stack: err.stack 
+            }));
           }
-        </script>
-      </body>
-    </html>
+        }
+
+        // Helper functions
+        function base64ToArrayBuffer(base64) {
+          const binaryString = atob(base64);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          return bytes.buffer;
+        }
+
+        function arrayBufferToBase64(buffer) {
+          const binary = Array.from(new Uint8Array(buffer))
+            .map(b => String.fromCharCode(b))
+            .join('');
+          return btoa(binary);
+        }
+      </script>
+    </head>
+    <body>
+      <div>Ready for witness generation...</div>
+    </body>
+  </html>
   `;
 
-  const handlePress = () => {
-    console.log('Triggering witness generation...');
-    webviewRef.current?.injectJavaScript('generateWitness()');
+  const handleGenerateWitness = async () => {
+    setIsLoading(true);
+    setWitnessStatus('Preparing witness data...');
+
+    try {
+      const { wasmBase64, input } = await createWitnessInput();
+      
+      // Serialize input for JavaScript
+      const serializedInput = JSON.stringify(input, (_, value) => 
+        typeof value === 'bigint' ? value.toString() : value
+      );
+
+      // Inject the JavaScript code
+      const injectedCode = `
+        (function() {
+          generateWitness("${wasmBase64}", ${serializedInput});
+        })();
+      `;
+      
+      webviewRef.current?.injectJavaScript(injectedCode);
+    } catch (error) {
+      console.error('Error:', error);
+      const message = error instanceof Error ? error.message : 'Unknown error occurred';
+      setWitnessStatus('Error: ' + message);
+      setIsLoading(false);
+    }
   };
 
-  const handleWebViewMessage = (event: any) => {
-    const data = JSON.parse(event.nativeEvent.data);
-    if (data.error) {
-      console.error('Witness generation error:', data.error);
-      return;
+  const handleMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      
+      if (data.error) {
+        setWitnessStatus('Error: ' + data.error);
+        console.error('Witness generation error:', data.error);
+        if (data.stack) console.error('Stack:', data.stack);
+      } else if (data.witness) {
+        setWitnessStatus('Witness generated successfully!');
+        
+        // Log the first few bytes of the witness for debugging
+        const witnessBytes = atob(data.witness).slice(0, 32);
+        console.log('First 32 bytes of witness:', 
+          Array.from(witnessBytes).map(b => b.charCodeAt(0).toString(16).padStart(2, '0')).join(' ')
+        );
+        
+        // Store or process the witness for the next step
+        // await processWitness(data.witness);
+      }
+    } catch (error) {
+      console.error('Error processing WebView message:', error);
+      setWitnessStatus('Error processing witness data');
     }
-    console.log('Witness generated:', data.witness);
-    setWitness(data.witness);
+    setIsLoading(false);
   };
 
   return (
@@ -48,26 +125,31 @@ export default function Verify() {
         <WebView
           ref={webviewRef}
           source={{ html: htmlContent }}
-          onMessage={handleWebViewMessage}
+          onMessage={handleMessage}
+          javaScriptEnabled
+          originWhitelist={['*']}
         />
       </View>
       
       <View className="flex-1 items-center justify-center bg-white">
         <Pressable
-          onPress={handlePress}
-          className="bg-blue-500 px-6 py-3 rounded-lg active:bg-blue-600"
+          onPress={handleGenerateWitness}
+          disabled={isLoading}
+          className={`${
+            isLoading ? 'bg-gray-400' : 'bg-blue-500 active:bg-blue-600'
+          } px-6 py-3 rounded-lg`}
         >
           <Text className="text-white font-semibold text-lg">
-            Generate Witness
+            {isLoading ? 'Generating...' : 'Generate Witness'}
           </Text>
         </Pressable>
         
-        {witness && (
+        {witnessStatus && (
           <Text className="mt-4 text-gray-700">
-            Witness Generated: {witness}
+            {witnessStatus}
           </Text>
         )}
       </View>
     </View>
   );
-} 
+}

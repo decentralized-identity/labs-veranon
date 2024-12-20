@@ -16,6 +16,11 @@ module.exports = function (api) {
             '@zk-kit/utils/error-handlers': './node_modules/@zk-kit/utils/dist/lib.esm/error-handlers.js',
             '@zk-kit/utils/f1-field': './node_modules/@zk-kit/utils/dist/lib.esm/f1-field.js',
             '@zk-kit/utils/scalar': './node_modules/@zk-kit/utils/dist/lib.esm/scalar.js',
+            '@zk-kit/utils/proof-packing': './node_modules/@zk-kit/utils/dist/lib.esm/proof-packing.js',
+            'ethers/crypto': './node_modules/ethers/lib.esm/crypto/index.js',
+            'ethers/utils': './node_modules/ethers/lib.esm/utils/index.js',
+            'ethers/abi': './node_modules/ethers/lib.esm/abi/index.js',
+            '@semaphore-protocol/utils/constants': './node_modules/@semaphore-protocol/utils/dist/lib.esm/constants.js'
           },
         },
       ],
