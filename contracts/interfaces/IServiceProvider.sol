@@ -13,8 +13,12 @@ interface IServiceProvider {
     error ServiceProvider__InvalidTreeRoot();
     error ServiceProvider__InvalidMerkleTreeDepth();
     error ServiceProvider__ManagerNotApproved();
+    error ServiceProvider__InsufficientFee();
+    error ServiceProvider__FeeTransferFailed();
+    error ServiceProvider__ManagerAlreadyApproved();
 
     event ServiceProviderRegistered(uint256 indexed serviceProviderId, address indexed provider);
+    event ManagerApproved(address indexed provider, uint256 indexed groupId);
     event AccountVerified(
         uint256 indexed groupId,
         uint256 indexed merkleTreeDepth,
@@ -41,7 +45,7 @@ interface IServiceProvider {
     }
 
     function register() external returns (uint256 serviceProviderId);
-    function setApprovedManager(uint256 managerId) external;
+    function setApprovedManager(uint256 groupId) external payable;
     function removeApprovedManager(uint256 managerId) external;
     function verifyAccount(uint256 groupId, SemaphoreProof calldata proof) external;
 

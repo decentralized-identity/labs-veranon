@@ -7,6 +7,7 @@ import {IManager} from "./interfaces/IManager.sol";
 contract Manager is SemaphoreGroups, IManager {
     uint256 public groupCounter;
     mapping(address => uint256) private _managerGroupIds;
+    mapping(uint256 groupId => uint256 fee) private _registrationFees;
 
     function register() external returns (uint256 groupId) {
         if (_managerGroupIds[msg.sender] != 0) {
@@ -52,6 +53,23 @@ contract Manager is SemaphoreGroups, IManager {
         uint256[] calldata merkleProofSiblings
     ) external {
         _removeMember(groupId, identityCommitment, merkleProofSiblings);
+    }
+
+    function setRegistrationFee(uint256 fee) external {
+        uint256 groupId = _managerGroupIds[msg.sender];
+        if (groupId == 0) {
+            revert Manager__NotRegistered();
+        }
+        _registrationFees[groupId] = fee;
+        emit RegistrationFeeUpdated(groupId, fee);
+    }
+
+    function getRegistrationFee(uint256 groupId) external view returns (uint256) {
+        return _registrationFees[groupId];
+    }
+
+    function getManagerAddress(uint256 groupId) external view returns (address) {
+        return admins[groupId];
     }
 
     // View functions

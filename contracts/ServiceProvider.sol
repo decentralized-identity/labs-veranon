@@ -17,7 +17,7 @@ contract ServiceProvider is IServiceProvider {
     mapping(uint256 serviceProviderId => mapping(uint256 accountId => bool isVerified)) public verifiedAccounts;
 
     modifier onlyRegisteredServiceProvider() {
-        if (!_serviceProviders[msg.sender].isRegistered) {
+        if (!isRegistered(msg.sender)) {
             revert ServiceProvider__NotRegistered();
         }
         _;
@@ -43,8 +43,29 @@ contract ServiceProvider is IServiceProvider {
         emit ServiceProviderRegistered(serviceProviderId, msg.sender);
     }
 
-    function setApprovedManager(uint256 managerId) external onlyRegisteredServiceProvider {
-        _serviceProviders[msg.sender].approvedManagers[managerId] = true;
+    function setApprovedManager(uint256 groupId) external payable onlyRegisteredServiceProvider {
+        // Check if manager is already approved
+        if (_serviceProviders[msg.sender].approvedManagers[groupId]) {
+            revert ServiceProvider__ManagerAlreadyApproved();
+        }
+
+        uint256 requiredFee = manager.getRegistrationFee(groupId);
+        if (msg.value < requiredFee) {
+            revert ServiceProvider__InsufficientFee();
+        }
+
+        address managerAddress = manager.getGroupManager(groupId);
+        
+        if (requiredFee > 0) {
+            (bool success, ) = managerAddress.call{value: msg.value}("");
+            if (!success) {
+                revert ServiceProvider__FeeTransferFailed();
+            }
+        }
+
+        _serviceProviders[msg.sender].approvedManagers[groupId] = true;
+        
+        emit ManagerApproved(msg.sender, groupId);
     }
 
     function removeApprovedManager(uint256 managerId) external onlyRegisteredServiceProvider {
