@@ -1,0 +1,50 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Manager
+    network: polygon-amoy
+    source:
+      address: "0x221D8e05eAE92e63d8C584d514e89733f4bEB52D"
+      abi: Manager
+      startBlock: 16586441
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - GroupAdminPending
+        - GroupAdminUpdated
+        - GroupCreated
+        - ManagerRegistered
+        - MemberAdded
+        - MemberRemoved
+        - MemberUpdated
+        - MembersAdded
+        - RegistrationFeeUpdated
+      abis:
+        - name: Manager
+          file: ./abis/Manager.json
+      eventHandlers:
+        - event: GroupAdminPending(indexed uint256,indexed address,indexed address)
+          handler: handleGroupAdminPending
+        - event: GroupAdminUpdated(indexed uint256,indexed address,indexed address)
+          handler: handleGroupAdminUpdated
+        - event: GroupCreated(indexed uint256)
+          handler: handleGroupCreated
+        - event: ManagerRegistered(indexed address,indexed uint256)
+          handler: handleManagerRegistered
+        - event: MemberAdded(indexed uint256,uint256,uint256,uint256)
+          handler: handleMemberAdded
+        - event: MemberRemoved(indexed uint256,uint256,uint256,uint256)
+          handler: handleMemberRemoved
+        - event: MemberUpdated(indexed uint256,uint256,uint256,uint256,uint256)
+          handler: handleMemberUpdated
+        - event: MembersAdded(indexed uint256,uint256,uint256[],uint256)
+          handler: handleMembersAdded
+        - event: RegistrationFeeUpdated(indexed uint256,uint256)
+          handler: handleRegistrationFeeUpdated
+      file: ./src/manager.ts
