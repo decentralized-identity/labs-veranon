@@ -37,8 +37,7 @@ describe("UpdateBugPOC", () => {
 
             // Register manager and get their group
             await managerContract.connect(manager).register()
-            const managerData = await managerContract.managers(manager.address)
-            groupId = managerData.groupId
+            groupId = await managerContract.getManagerGroupId(manager.address)
         })
 
         it("Should correctly add identity commitment and verify merkle root", async () => {

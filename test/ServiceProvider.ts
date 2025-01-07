@@ -168,7 +168,7 @@ describe("ServiceProvider", () => {
             // Create identity and register manager
             identity = new Identity()
             await managerContract.connect(user1).register()
-            groupId = await managerContract.managers(user1.address).then(data => data.groupId)
+            groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Approve the manager
             await serviceProviderContract.connect(user1).setApprovedManager(groupId)

@@ -6,20 +6,17 @@ import {IManager} from "./interfaces/IManager.sol";
 
 contract Manager is SemaphoreGroups, IManager {
     uint256 public groupCounter;
-    mapping(address => ManagerData) private _managers;
+    mapping(address => uint256) private _managerGroupIds;
 
     function register() external returns (uint256 groupId) {
-        if (_managers[msg.sender].isRegistered) {
+        if (_managerGroupIds[msg.sender] != 0) {
             revert Manager__AlreadyRegistered();
         }
 
-        groupId = groupCounter++;
+        groupId = ++groupCounter;
         _createGroup(groupId, msg.sender);
 
-        _managers[msg.sender] = ManagerData({
-            isRegistered: true,
-            groupId: groupId
-        });
+        _managerGroupIds[msg.sender] = groupId;
 
         emit ManagerRegistered(msg.sender, groupId);
     }
@@ -63,8 +60,8 @@ contract Manager is SemaphoreGroups, IManager {
         return admins[groupId];
     }
 
-    function managers(address manager) external view returns (ManagerData memory) {
-        return _managers[manager];
+    function getManagerGroupId(address manager) external view returns (uint256) {
+        return _managerGroupIds[manager];
     }
 
     function getMerkleTreeRoot(uint256 groupId) public view override(SemaphoreGroups, IManager) returns (uint256) {

@@ -40,12 +40,11 @@ describe("Manager", () => {
             // Verify the registration event
             await expect(tx)
                 .to.emit(managerContract, "ManagerRegistered")
-                .withArgs(user1.address, 0) // First group ID should be 0
+                .withArgs(user1.address, 1) // First group ID should be 0
 
             // Check manager data
-            const managerData = await managerContract.managers(user1.address)
-            expect(managerData.isRegistered).to.be.true
-            expect(managerData.groupId).to.equal(0)
+            const managerGroupId = await managerContract.getManagerGroupId(user1.address)
+            expect(managerGroupId).to.equal(1)
         })
 
         it("Should not allow a user to register twice", async () => {
@@ -68,9 +67,8 @@ describe("Manager", () => {
             await managerContract.connect(user1).register()
             
             // Get the groupId from the manager's data
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
-
+            const groupId = await managerContract.getManagerGroupId(user1.address)
+          
             // Verify initial group manager is user1
             expect(await managerContract.getGroupManager(groupId)).to.equal(user1.address)
 
@@ -94,8 +92,7 @@ describe("Manager", () => {
             await managerContract.connect(user1).register()
             
             // Get the groupId from the manager's data
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // user2 tries to transfer user1's group (should fail)
             await expect(
@@ -110,8 +107,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Create a new identity commitment
             const identity = new Identity()
@@ -131,8 +127,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Create multiple identity commitments
             const identities = [new Identity(), new Identity(), new Identity()]
@@ -153,8 +148,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Create a new identity commitment
             const identity = new Identity()
@@ -183,8 +177,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Create identities and a group
             const oldIdentity = new Identity()
@@ -215,8 +208,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Create identity and group
             const identity = new Identity()
@@ -266,8 +258,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Create multiple identities
             const identities = [
@@ -304,8 +295,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             const oldIdentity = new Identity()
             const newIdentity = new Identity()
@@ -342,8 +332,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             const existingIdentity = new Identity()
             const nonExistentIdentity = new Identity()
@@ -383,8 +372,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Create multiple identities
             const identities = [
@@ -426,8 +414,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Verify getGroupManager returns correct address
             expect(await managerContract.getGroupManager(groupId)).to.equal(user1.address)
@@ -440,11 +427,10 @@ describe("Manager", () => {
             await managerContract.connect(user1).register()
 
             // Get manager data
-            const managerData = await managerContract.managers(user1.address)
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Verify data is correct
-            expect(managerData.isRegistered).to.be.true
-            expect(managerData.groupId).to.equal(0)
+            expect(groupId).to.equal(1)
         })
 
         it("Should correctly return merkle tree root", async () => {
@@ -452,8 +438,7 @@ describe("Manager", () => {
 
             // Register user1 as manager
             await managerContract.connect(user1).register()
-            const managerData = await managerContract.managers(user1.address)
-            const groupId = managerData.groupId
+            const groupId = await managerContract.getManagerGroupId(user1.address)
 
             // Get initial root
             const initialRoot = await managerContract.getMerkleTreeRoot(groupId)

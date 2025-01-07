@@ -2,18 +2,13 @@
 pragma solidity 0.8.28;
 
 interface IManager {
-    struct ManagerData {
-        bool isRegistered;
-        uint256 groupId;
-    }
-
     error Manager__AlreadyRegistered();
 
     event ManagerRegistered(address indexed manager, uint256 indexed groupId);
 
     function groupCounter() external view returns (uint256);
     function getGroupManager(uint256 groupId) external view returns (address);
-    function managers(address manager) external view returns (ManagerData memory);
+    function getManagerGroupId(address manager) external view returns (uint256);
     function getMerkleTreeRoot(uint256 groupId) external view returns (uint256);
 
     function register() external returns (uint256 groupId);
