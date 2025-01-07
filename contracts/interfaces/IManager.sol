@@ -9,7 +9,7 @@ interface IManager {
     event RegistrationFeeUpdated(uint256 indexed groupId, uint256 fee);
 
     function groupCounter() external view returns (uint256);
-    function getGroupManager(uint256 groupId) external view returns (address);
+    function getManagerAddress(uint256 groupId) external view returns (address);
     function getManagerGroupId(address manager) external view returns (uint256);
     function getMerkleTreeRoot(uint256 groupId) external view returns (uint256);
     function getRegistrationFee(uint256 groupId) external view returns (uint256);

@@ -70,19 +70,19 @@ describe("Manager", () => {
             const groupId = await managerContract.getManagerGroupId(user1.address)
           
             // Verify initial group manager is user1
-            expect(await managerContract.getGroupManager(groupId)).to.equal(user1.address)
+            expect(await managerContract.getManagerAddress(groupId)).to.equal(user1.address)
 
             // user1 initiates transfer to user2
             await managerContract.connect(user1).updateGroupManager(groupId, user2.address)
 
             // Verify manager hasn't changed yet (pending acceptance)
-            expect(await managerContract.getGroupManager(groupId)).to.equal(user1.address)
+            expect(await managerContract.getManagerAddress(groupId)).to.equal(user1.address)
 
             // user2 accepts the transfer
             await managerContract.connect(user2).acceptGroupManager(groupId)
 
             // Verify user2 is now the group manager
-            expect(await managerContract.getGroupManager(groupId)).to.equal(user2.address)
+            expect(await managerContract.getManagerAddress(groupId)).to.equal(user2.address)
         })
 
         it("Should not allow unauthorized transfers", async () => {
@@ -416,8 +416,8 @@ describe("Manager", () => {
             await managerContract.connect(user1).register()
             const groupId = await managerContract.getManagerGroupId(user1.address)
 
-            // Verify getGroupManager returns correct address
-            expect(await managerContract.getGroupManager(groupId)).to.equal(user1.address)
+            // Verify getManagerAddress returns correct address
+            expect(await managerContract.getManagerAddress(groupId)).to.equal(user1.address)
         })
 
         it("Should correctly return manager data", async () => {

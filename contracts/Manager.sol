@@ -105,13 +105,6 @@ contract Manager is SemaphoreGroups, IManager {
         return admins[groupId];
     }
 
-    /// @notice Gets the manager address for a group
-    /// @param groupId The ID of the group
-    /// @return The manager's address
-    function getGroupManager(uint256 groupId) external view returns (address) {
-        return admins[groupId];
-    }
-
     /// @notice Gets the group ID for a manager
     /// @param manager The address of the manager
     /// @return The group ID

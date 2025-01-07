@@ -63,7 +63,7 @@ contract ServiceProvider is IServiceProvider {
             revert ServiceProvider__InsufficientFee();
         }
 
-        address managerAddress = manager.getGroupManager(groupId);
+        address managerAddress = manager.getManagerAddress(groupId);
         
         if (requiredFee > 0) {
             (bool success, ) = managerAddress.call{value: msg.value}("");
@@ -94,7 +94,7 @@ contract ServiceProvider is IServiceProvider {
         }
 
         // check if group exists
-        if (manager.getGroupManager(groupId) == address(0)) {
+        if (manager.getManagerAddress(groupId) == address(0)) {
             revert ServiceProvider__GroupDoesNotExist();
         }
 
