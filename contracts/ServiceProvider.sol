@@ -17,7 +17,7 @@ contract ServiceProvider is IServiceProvider {
     mapping(uint256 serviceProviderId => mapping(uint256 accountId => bool isVerified)) public verifiedAccounts;
 
     modifier onlyRegisteredServiceProvider() {
-        if (!isRegistered(msg.sender)) {
+        if (_serviceProviders[msg.sender].serviceProviderId == 0) {
             revert ServiceProvider__NotRegistered();
         }
         _;
@@ -33,11 +33,9 @@ contract ServiceProvider is IServiceProvider {
             revert ServiceProvider__AlreadyRegistered();
         }
 
-        serviceProviderId = serviceProviderCounter++;
+        serviceProviderId = ++serviceProviderCounter;
 
-        _serviceProviders[msg.sender].isRegistered = true;
         _serviceProviders[msg.sender].serviceProviderId = serviceProviderId;
-
         serviceProviderAddresses[serviceProviderId] = msg.sender;
 
         emit ServiceProviderRegistered(serviceProviderId, msg.sender);
@@ -133,7 +131,7 @@ contract ServiceProvider is IServiceProvider {
     // View functions
 
     function isRegistered(address provider) public view returns (bool) {
-        return _serviceProviders[provider].isRegistered;
+        return _serviceProviders[provider].serviceProviderId != 0;
     }
 
     function getServiceProviderId(address provider) public view returns (uint256) {

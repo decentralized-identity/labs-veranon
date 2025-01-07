@@ -30,7 +30,6 @@ interface IServiceProvider {
     );
 
     struct ServiceProviderData {
-        bool isRegistered;
         uint256 serviceProviderId;
         mapping(uint256 managerId => bool isApproved) approvedManagers;
     }

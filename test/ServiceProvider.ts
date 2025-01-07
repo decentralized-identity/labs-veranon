@@ -67,11 +67,11 @@ describe("ServiceProvider", () => {
             // Verify the registration event
             await expect(tx)
                 .to.emit(serviceProviderContract, "ServiceProviderRegistered")
-                .withArgs(0, user1.address) // First ID should be 0
+                .withArgs(1, user1.address) // First ID should be 1 (pre-increment)
 
             // Check registration status
             expect(await serviceProviderContract.isRegistered(user1.address)).to.be.true
-            expect(await serviceProviderContract.getServiceProviderId(user1.address)).to.equal(0)
+            expect(await serviceProviderContract.getServiceProviderId(user1.address)).to.equal(1)
         })
 
         it("Should not allow a user to register twice", async () => {
