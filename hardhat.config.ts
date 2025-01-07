@@ -14,6 +14,11 @@ const config: HardhatUserConfig = {
         hardhat: {
             chainId: 1337
         },
+        amoy: {
+            url: "https://rpc-amoy.polygon.technology/",
+            chainId: 80002,
+            accounts: [process.env.ETHEREUM_PRIVATE_KEY]
+        },
         ...getHardhatNetworks(process.env.ETHEREUM_PRIVATE_KEY)
     },
     typechain: {
