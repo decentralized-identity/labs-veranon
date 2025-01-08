@@ -21,3 +21,35 @@ type Member @entity {
     index: Int!
     group: Group!
 }
+
+type AccountVerified @entity(immutable: true) {
+  id: Bytes!
+  groupId: BigInt! # uint256
+  merkleTreeDepth: BigInt! # uint256
+  merkleTreeRoot: BigInt! # uint256
+  nullifier: BigInt! # uint256
+  message: BigInt! # uint256
+  scope: BigInt! # uint256
+  points: [BigInt!]! # uint256[8]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ManagerApproved @entity(immutable: true) {
+  id: Bytes!
+  provider: Bytes! # address
+  groupId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ServiceProviderRegistered @entity(immutable: true) {
+  id: Bytes!
+  serviceProviderId: BigInt! # uint256
+  provider: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
