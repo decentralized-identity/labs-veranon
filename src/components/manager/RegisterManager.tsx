@@ -1,11 +1,25 @@
-import { useWriteContract } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
 import { CONTRACT_ADDRESSES } from "../../contracts/addresses"
 import { abi } from "../../contracts/artifacts/Manager.json"
 
-export function RegisterManager() {
-  const { writeContract, isPending } = useWriteContract()
+type RegisterManagerProps = {
+  onRegistrationComplete?: () => void;
+}
+
+export function RegisterManager({ onRegistrationComplete }: RegisterManagerProps) {
+  const { writeContract, data: hash, isPending } = useWriteContract()
+  
+  // Watch for transaction confirmation
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  })
+
+  // Notify parent component when transaction is confirmed
+  if (isSuccess && onRegistrationComplete) {
+    onRegistrationComplete()
+  }
 
   const handleRegister = () => {
     writeContract({
@@ -29,10 +43,12 @@ export function RegisterManager() {
       <CardContent>
         <Button 
           onClick={handleRegister} 
-          disabled={isPending}
+          disabled={isPending || isConfirming}
           size="lg"
         >
-          {isPending ? 'Registering...' : 'Register Now'}
+          {isPending ? 'Confirming Transaction...' : 
+           isConfirming ? 'Registering...' : 
+           'Register Now'}
         </Button>
       </CardContent>
     </Card>

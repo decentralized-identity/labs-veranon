@@ -11,7 +11,7 @@ const publicClient = createPublicClient({
 })
 
 async function testCreateGroup() {
-  const groupId = '5'
+  const groupId = '1'
 
   try {
     const group = await GroupUtils.createGroup(groupId)

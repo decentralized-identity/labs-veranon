@@ -1,7 +1,7 @@
 import { request, gql } from 'graphql-request'
 import { Group } from '@semaphore-protocol/group'
 
-const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-subgraph/v1.0.0'
+const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-subgraph/v1.1.0'
 
 const GROUP_MEMBERS_QUERY = gql`
   query GetGroupMembers($groupId: ID!) {
@@ -16,7 +16,6 @@ const GROUP_MEMBERS_QUERY = gql`
         id
         index
         identityCommitment
-        timestamp
       }
     }
   }
@@ -27,6 +26,18 @@ const GROUP_MEMBER_COUNT_QUERY = gql`
     group(id: $groupId) {
       merkleTree {
         size
+      }
+    }
+  }
+`
+
+const CHECK_MANAGER_QUERY = gql`
+  query CheckManager($address: ID!) {
+    manager(id: $address) {
+      id
+      groupId
+      group {
+        id
       }
     }
   }
@@ -56,6 +67,16 @@ type GroupMemberCountResponse = {
       size: number
     }
   }
+}
+
+type ManagerQueryResponse = {
+  manager: {
+    id: string
+    groupId: string
+    group: {
+      id: string
+    }
+  } | null
 }
 
 export class GroupUtils {
@@ -128,6 +149,40 @@ export class GroupUtils {
     } catch (error) {
       console.error('Error fetching member count:', error)
       return 0
+    }
+  }
+
+  /**
+   * Checks if an address is a registered manager and returns their group details
+   * @param address Ethereum address to check
+   * @returns Object containing isManager status, groupId, and memberCount if they are a manager
+   */
+  static async isManager(address: string): Promise<{
+    isManager: boolean
+    groupId?: string
+  }> {
+    try {
+      if (!address) {
+        return { isManager: false }
+      }
+
+      const data = await request<ManagerQueryResponse>(
+        SUBGRAPH_URL,
+        CHECK_MANAGER_QUERY,
+        { address: address.toLowerCase() }
+      )
+      
+      if (!data.manager) {
+        return { isManager: false }
+      }
+
+      return {
+        isManager: true,
+        groupId: data.manager.groupId
+      }
+    } catch (error) {
+      console.error('Error checking manager status:', error)
+      return { isManager: false }
     }
   }
 } 

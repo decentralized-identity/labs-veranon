@@ -1,27 +1,57 @@
-import { useAccount, useReadContract } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { GroupOverview } from "./manager/GroupOverview"
 import { QuickActions } from "./manager/QuickActions"
 import { ActivityFeed } from "./manager/ActivityFeed"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { Skeleton } from "./ui/skeleton"
 import { RegisterManager } from "./manager/RegisterManager"
-import { CONTRACT_ADDRESSES } from "../contracts/addresses"
-import { abi } from "../contracts/artifacts/Manager.json"
+import { GroupUtils } from "../lib/groupUtils"
+import { useEffect, useState, useCallback } from 'react'
 
 type ManagerData = {
   isRegistered: boolean;
-  groupId: bigint;
+  groupId: string | undefined;
 }
 
 export function Manager() {
   const { address, status } = useAccount()
-  
-  const { data: managerData, isLoading: isLoadingManager } = useReadContract({
-    address: CONTRACT_ADDRESSES.MANAGER,
-    abi,
-    functionName: 'managers',
-    args: address ? [address] : undefined,
-  }) as { data: ManagerData | undefined, isLoading: boolean }
+  const [managerData, setManagerData] = useState<ManagerData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const checkManagerStatus = useCallback(async () => {
+    if (!address) {
+      setManagerData(null)
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const { isManager, groupId } = await GroupUtils.isManager(address)
+      setManagerData({
+        isRegistered: isManager,
+        groupId: groupId
+      })
+    } catch (error) {
+      console.error('Error checking manager status:', error)
+      setManagerData(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [address])
+
+  useEffect(() => {
+    setIsLoading(true)
+    checkManagerStatus()
+  }, [checkManagerStatus])
+
+  const handleRegistrationComplete = useCallback(() => {
+    // Immediately check the subgraph when transaction is confirmed
+    checkManagerStatus()
+    
+    // If we need the timeout later, we can uncomment this:
+    // await new Promise(resolve => setTimeout(resolve, 5000))
+    // checkManagerStatus()
+  }, [checkManagerStatus])
 
   // Show connect wallet prompt if not connected
   if (status === 'disconnected') {
@@ -40,7 +70,7 @@ export function Manager() {
   }
 
   // Show loading state while connecting or fetching manager data
-  if (status === 'connecting' || isLoadingManager) {
+  if (status === 'connecting' || isLoading) {
     return (
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
@@ -59,7 +89,7 @@ export function Manager() {
   if (!managerData?.isRegistered) {
     return (
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <RegisterManager />
+        <RegisterManager onRegistrationComplete={handleRegistrationComplete} />
       </div>
     )
   }
@@ -67,7 +97,7 @@ export function Manager() {
   // Show manager dashboard if connected and registered
   return (
     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <GroupOverview groupId={managerData ? Number(managerData.groupId) : 0} />
+      <GroupOverview groupId={managerData.groupId ? Number(managerData.groupId) : 0} />
       <QuickActions />
       <ActivityFeed />
     </div>
