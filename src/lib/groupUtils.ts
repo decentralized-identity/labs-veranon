@@ -1,18 +1,22 @@
 import { request, gql } from 'graphql-request'
 import { Group } from '@semaphore-protocol/group'
 
-const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-test-1/v0.3.0'
+const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-subgraph/v1.0.0'
 
 const GROUP_MEMBERS_QUERY = gql`
   query GetGroupMembers($groupId: ID!) {
     group(id: $groupId) {
       id
-      memberCount
-      merkleTreeRoot
-      members(where: { active: true }, orderBy: index, orderDirection: asc) {
+      merkleTree {
+        size
+        root
+        depth
+      }
+      members(orderBy: index) {
         id
         index
         identityCommitment
+        timestamp
       }
     }
   }
@@ -21,7 +25,9 @@ const GROUP_MEMBERS_QUERY = gql`
 const GROUP_MEMBER_COUNT_QUERY = gql`
   query GetGroupMemberCount($groupId: ID!) {
     group(id: $groupId) {
-      memberCount
+      merkleTree {
+        size
+      }
     }
   }
 `
@@ -35,15 +41,20 @@ type GroupMember = {
 type GroupQueryResponse = {
   group: {
     id: string
-    memberCount: number
-    merkleTreeRoot: string
+    merkleTree: {
+      size: number
+      root: string
+      depth: number
+    }
     members: GroupMember[]
   }
 }
 
 type GroupMemberCountResponse = {
   group: {
-    memberCount: number
+    merkleTree: {
+      size: number
+    }
   }
 }
 
@@ -105,16 +116,15 @@ export class GroupUtils {
   }
 
   /**
-   * Gets the active member count for a group
+   * Gets the active member count for a group by filtering out zero commitments
    */
   static async getActiveMemberCount(groupId: string | number): Promise<number> {
     try {
-      const data = await request<GroupMemberCountResponse>(
-        SUBGRAPH_URL,
-        GROUP_MEMBER_COUNT_QUERY,
-        { groupId: groupId.toString() }
-      )
-      return data.group.memberCount
+      const members = await this.fetchGroupMembers(groupId)
+      // Filter out members with zero identity commitments and count remaining
+      return members.filter(member => 
+        BigInt(member.identityCommitment) !== BigInt(0)
+      ).length
     } catch (error) {
       console.error('Error fetching member count:', error)
       return 0
