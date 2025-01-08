@@ -53,3 +53,10 @@ type ServiceProviderRegistered @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
+type Manager @entity {
+  id: ID! # address
+  timestamp: BigInt!
+  groupId: BigInt!
+  group: Group!
+}

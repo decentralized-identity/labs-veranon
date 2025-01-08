@@ -23,8 +23,8 @@ dataSources:
         - name: Manager
           file: ./abis/Manager.json
       eventHandlers:
-        - event: GroupCreated(indexed uint256)
-          handler: createGroup
+        # - event: GroupCreated(indexed uint256)
+        #   handler: createGroup
         - event: GroupAdminUpdated(indexed uint256,indexed address,indexed address)
           handler: updateGroupAdmin
         - event: MemberAdded(indexed uint256,uint256,uint256,uint256)
@@ -35,6 +35,8 @@ dataSources:
           handler: updateMember
         - event: MembersAdded(indexed uint256,uint256,uint256[],uint256)
           handler: addMembers
+        - event: ManagerRegistered(indexed address,indexed uint256)
+          handler: handleManagerRegistered
       file: ./src/manager.ts
   - kind: ethereum
     name: ServiceProvider

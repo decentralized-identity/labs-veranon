@@ -5,35 +5,36 @@ import {
     MemberAdded,
     MemberRemoved,
     MemberUpdated,
-    MembersAdded
+    MembersAdded,
+    ManagerRegistered
 } from "../generated/Manager/Manager"
-import { Group, Member, MerkleTree } from "../generated/schema"
+import { Group, Member, MerkleTree, Manager } from "../generated/schema"
 import { concat, hash } from "./utils"
 
-/**
- * Creates a new group.
- * @param event Ethereum event emitted when a group is created.
- */
-export function createGroup(event: GroupCreated): void {
-    log.debug(`GroupCreated event block: {}`, [event.block.number.toString()])
+// /**
+//  * Creates a new group.
+//  * @param event Ethereum event emitted when a group is created.
+//  */
+// export function createGroup(event: GroupCreated): void {
+//     log.debug(`GroupCreated event block: {}`, [event.block.number.toString()])
 
-    const group = new Group(event.params.groupId.toString())
-    const merkleTree = new MerkleTree(event.params.groupId.toString())
+//     const group = new Group(event.params.groupId.toString())
+//     const merkleTree = new MerkleTree(event.params.groupId.toString())
 
-    log.info("Creating group '{}'", [group.id])
+//     log.info("Creating group '{}'", [group.id])
 
-    merkleTree.depth = 0
-    merkleTree.size = 0
-    merkleTree.group = group.id
+//     merkleTree.depth = 0
+//     merkleTree.size = 0
+//     merkleTree.group = group.id
 
-    group.timestamp = event.block.timestamp
-    group.merkleTree = merkleTree.id
+//     group.timestamp = event.block.timestamp
+//     group.merkleTree = merkleTree.id
 
-    merkleTree.save()
-    group.save()
+//     merkleTree.save()
+//     group.save()
 
-    log.info("Group '{}' has been created", [group.id])
-}
+//     log.info("Group '{}' has been created", [group.id])
+// }
 
 /**
  * Updates the admin of a group.
@@ -191,4 +192,42 @@ export function addMembers(event: MembersAdded): void {
 
         merkleTree.save()
     }
+}
+
+export function handleManagerRegistered(event: ManagerRegistered): void {
+    log.debug(`ManagerRegistered event block: {}`, [event.block.number.toString()])
+
+    const groupId = event.params.groupId.toString()
+    const group = new Group(groupId)
+    const merkleTree = new MerkleTree(groupId)
+    const manager = new Manager(event.params.manager.toHexString())
+
+    log.info("Creating group '{}' with manager '{}'", [
+        groupId,
+        event.params.manager.toHexString()
+    ])
+
+    // Set up MerkleTree
+    merkleTree.depth = 0
+    merkleTree.size = 0
+    merkleTree.group = group.id
+
+    // Set up Group
+    group.timestamp = event.block.timestamp
+    group.merkleTree = merkleTree.id
+    group.admin = event.params.manager
+
+    // Set up Manager
+    manager.timestamp = event.block.timestamp
+    manager.groupId = event.params.groupId
+    manager.group = group.id
+
+    merkleTree.save()
+    group.save()
+    manager.save()
+
+    log.info("Group '{}' has been created with admin '{}' and manager entity created", [
+        group.id, 
+        event.params.manager.toHexString()
+    ])
 }
