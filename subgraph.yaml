@@ -16,37 +16,25 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - GroupAdminPending
-        - GroupAdminUpdated
-        - GroupCreated
-        - ManagerRegistered
-        - MemberAdded
-        - MemberRemoved
-        - MemberUpdated
-        - MembersAdded
-        - RegistrationFeeUpdated
+        - Group
+        - Member
+        - MerkleTree
       abis:
         - name: Manager
           file: ./abis/Manager.json
       eventHandlers:
-        - event: GroupAdminPending(indexed uint256,indexed address,indexed address)
-          handler: handleGroupAdminPending
-        - event: GroupAdminUpdated(indexed uint256,indexed address,indexed address)
-          handler: handleGroupAdminUpdated
         - event: GroupCreated(indexed uint256)
-          handler: handleGroupCreated
-        - event: ManagerRegistered(indexed address,indexed uint256)
-          handler: handleManagerRegistered
+          handler: createGroup
+        - event: GroupAdminUpdated(indexed uint256,indexed address,indexed address)
+          handler: updateGroupAdmin
         - event: MemberAdded(indexed uint256,uint256,uint256,uint256)
-          handler: handleMemberAdded
+          handler: addMember
         - event: MemberRemoved(indexed uint256,uint256,uint256,uint256)
-          handler: handleMemberRemoved
+          handler: removeMember
         - event: MemberUpdated(indexed uint256,uint256,uint256,uint256,uint256)
-          handler: handleMemberUpdated
+          handler: updateMember
         - event: MembersAdded(indexed uint256,uint256,uint256[],uint256)
-          handler: handleMembersAdded
-        - event: RegistrationFeeUpdated(indexed uint256,uint256)
-          handler: handleRegistrationFeeUpdated
+          handler: addMembers
       file: ./src/manager.ts
   - kind: ethereum
     name: ServiceProvider

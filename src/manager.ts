@@ -1,160 +1,194 @@
+import { BigInt, ByteArray, log } from "@graphprotocol/graph-ts"
 import {
-  GroupAdminPending as GroupAdminPendingEvent,
-  GroupAdminUpdated as GroupAdminUpdatedEvent,
-  GroupCreated as GroupCreatedEvent,
-  ManagerRegistered as ManagerRegisteredEvent,
-  MemberAdded as MemberAddedEvent,
-  MemberRemoved as MemberRemovedEvent,
-  MemberUpdated as MemberUpdatedEvent,
-  MembersAdded as MembersAddedEvent,
-  RegistrationFeeUpdated as RegistrationFeeUpdatedEvent
+    GroupAdminUpdated,
+    GroupCreated,
+    MemberAdded,
+    MemberRemoved,
+    MemberUpdated,
+    MembersAdded
 } from "../generated/Manager/Manager"
-import {
-  GroupAdminPending,
-  GroupAdminUpdated,
-  GroupCreated,
-  ManagerRegistered,
-  MemberAdded,
-  MemberRemoved,
-  MemberUpdated,
-  MembersAdded,
-  RegistrationFeeUpdated
-} from "../generated/schema"
+import { Group, Member, MerkleTree } from "../generated/schema"
+import { concat, hash } from "./utils"
 
-export function handleGroupAdminPending(event: GroupAdminPendingEvent): void {
-  let entity = new GroupAdminPending(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.groupId = event.params.groupId
-  entity.oldAdmin = event.params.oldAdmin
-  entity.newAdmin = event.params.newAdmin
+/**
+ * Creates a new group.
+ * @param event Ethereum event emitted when a group is created.
+ */
+export function createGroup(event: GroupCreated): void {
+    log.debug(`GroupCreated event block: {}`, [event.block.number.toString()])
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+    const group = new Group(event.params.groupId.toString())
+    const merkleTree = new MerkleTree(event.params.groupId.toString())
 
-  entity.save()
+    log.info("Creating group '{}'", [group.id])
+
+    merkleTree.depth = 0
+    merkleTree.size = 0
+    merkleTree.group = group.id
+
+    group.timestamp = event.block.timestamp
+    group.merkleTree = merkleTree.id
+
+    merkleTree.save()
+    group.save()
+
+    log.info("Group '{}' has been created", [group.id])
 }
 
-export function handleGroupAdminUpdated(event: GroupAdminUpdatedEvent): void {
-  let entity = new GroupAdminUpdated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.groupId = event.params.groupId
-  entity.oldAdmin = event.params.oldAdmin
-  entity.newAdmin = event.params.newAdmin
+/**
+ * Updates the admin of a group.
+ * @param event Ethereum event emitted when a group admin is updated.
+ */
+export function updateGroupAdmin(event: GroupAdminUpdated): void {
+    log.debug(`GroupAdminUpdated event block: {}`, [event.block.number.toString()])
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+    const group = Group.load(event.params.groupId.toString())
 
-  entity.save()
+    if (group) {
+        log.info("Updating admin '{}' in the group '{}'", [event.params.newAdmin.toString(), group.id])
+
+        group.admin = event.params.newAdmin
+
+        group.save()
+
+        log.info("Admin '{}' of the group '{}' has been updated ", [group.admin!.toString(), group.id])
+    }
 }
 
-export function handleGroupCreated(event: GroupCreatedEvent): void {
-  let entity = new GroupCreated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.groupId = event.params.groupId
+/**
+ * Adds a member to a group.
+ * @param event Ethereum event emitted when a member is added to a group.
+ */
+export function addMember(event: MemberAdded): void {
+    log.debug(`MemberAdded event block {}`, [event.block.number.toString()])
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+    const merkleTree = MerkleTree.load(event.params.groupId.toString())
 
-  entity.save()
+    if (merkleTree) {
+        const memberId = hash(
+            concat(ByteArray.fromI32(event.params.index.toI32()), ByteArray.fromBigInt(event.params.groupId))
+        )
+        const member = new Member(memberId)
+
+        log.info("Adding member '{}' in the onchain group '{}'", [member.id, merkleTree.group])
+
+        member.group = merkleTree.group
+        member.identityCommitment = event.params.identityCommitment
+        member.timestamp = event.block.timestamp
+        member.index = merkleTree.size
+
+        member.save()
+
+        merkleTree.root = event.params.merkleTreeRoot
+        merkleTree.size += 1
+
+        merkleTree.save()
+
+        log.info("Member '{}' of the onchain group '{}' has been added", [member.id, merkleTree.id])
+    }
 }
 
-export function handleManagerRegistered(event: ManagerRegisteredEvent): void {
-  let entity = new ManagerRegistered(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.manager = event.params.manager
-  entity.groupId = event.params.groupId
+/**
+ * Updates a member in a group.
+ * @param event Ethereum event emitted when a member is removed from a group.
+ */
+export function updateMember(event: MemberUpdated): void {
+    log.debug(`MemberUpdated event block {}`, [event.block.number.toString()])
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+    const merkleTree = MerkleTree.load(event.params.groupId.toString())
 
-  entity.save()
+    if (merkleTree) {
+        const memberId = hash(
+            concat(ByteArray.fromI32(event.params.index.toI32()), ByteArray.fromBigInt(event.params.groupId))
+        )
+        
+        const member = Member.load(memberId)
+
+        if (member) {
+            log.info("Updating member '{}' from the onchain group '{}'", [member.id, merkleTree.group])
+
+            member.identityCommitment = event.params.newIdentityCommitment
+
+            member.save()
+
+            merkleTree.root = event.params.merkleTreeRoot
+
+            merkleTree.save()
+
+            log.info("Member '{}' of the onchain group '{}' has been removed", [member.id, merkleTree.group])
+        }
+    }
 }
 
-export function handleMemberAdded(event: MemberAddedEvent): void {
-  let entity = new MemberAdded(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.groupId = event.params.groupId
-  entity.index = event.params.index
-  entity.identityCommitment = event.params.identityCommitment
-  entity.merkleTreeRoot = event.params.merkleTreeRoot
+/**
+ * Removes a member from a group.
+ * @param event Ethereum event emitted when a member is removed from a group.
+ */
+export function removeMember(event: MemberRemoved): void {
+    log.debug(`MemberRemoved event block {}`, [event.block.number.toString()])
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+    const merkleTree = MerkleTree.load(event.params.groupId.toString())
 
-  entity.save()
+    if (merkleTree) {
+        const memberId = hash(
+            concat(ByteArray.fromI32(event.params.index.toI32()), ByteArray.fromBigInt(event.params.groupId))
+        )
+        const member = Member.load(memberId)
+
+        if (member) {
+            log.info("Removing member '{}' from the onchain group '{}'", [member.id, merkleTree.group])
+
+            member.identityCommitment = BigInt.fromI32(0)
+
+            member.save()
+
+            merkleTree.root = event.params.merkleTreeRoot
+
+            merkleTree.save()
+
+            log.info("Member '{}' of the onchain group '{}' has been removed", [member.id, merkleTree.group])
+        }
+    }
 }
 
-export function handleMemberRemoved(event: MemberRemovedEvent): void {
-  let entity = new MemberRemoved(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.groupId = event.params.groupId
-  entity.index = event.params.index
-  entity.identityCommitment = event.params.identityCommitment
-  entity.merkleTreeRoot = event.params.merkleTreeRoot
+/**
+ * Adds N members to a group.
+ * @param event Ethereum event emitted when many members are added to a group.
+ */
+export function addMembers(event: MembersAdded): void {
+    log.debug(`MembersAdded event block {}`, [event.block.number.toString()])
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+    const merkleTree = MerkleTree.load(event.params.groupId.toString())
 
-  entity.save()
-}
+    // eslint-disable-next-line prefer-destructuring
+    const identityCommitments = event.params.identityCommitments
+    // eslint-disable-next-line prefer-destructuring
+    const startIndex = event.params.startIndex
 
-export function handleMemberUpdated(event: MemberUpdatedEvent): void {
-  let entity = new MemberUpdated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.groupId = event.params.groupId
-  entity.index = event.params.index
-  entity.identityCommitment = event.params.identityCommitment
-  entity.newIdentityCommitment = event.params.newIdentityCommitment
-  entity.merkleTreeRoot = event.params.merkleTreeRoot
+    if (merkleTree) {
+        for (let i = 0; i < identityCommitments.length; i += 1) {
+            const identityCommitment = identityCommitments[i]
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+            const memberId = hash(
+                concat(ByteArray.fromI32(startIndex.toI32() + i), ByteArray.fromBigInt(event.params.groupId))
+            )
+            const member = new Member(memberId)
 
-  entity.save()
-}
+            log.info("Adding member '{}' in the onchain group '{}'", [member.id, merkleTree.group])
 
-export function handleMembersAdded(event: MembersAddedEvent): void {
-  let entity = new MembersAdded(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.groupId = event.params.groupId
-  entity.startIndex = event.params.startIndex
-  entity.identityCommitments = event.params.identityCommitments
-  entity.merkleTreeRoot = event.params.merkleTreeRoot
+            member.group = merkleTree.group
+            member.identityCommitment = identityCommitment
+            member.timestamp = event.block.timestamp
+            member.index = startIndex.toI32() + i
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+            member.save()
 
-  entity.save()
-}
+            log.info("Member '{}' of the onchain group '{}' has been added", [member.id, merkleTree.id])
+        }
 
-export function handleRegistrationFeeUpdated(
-  event: RegistrationFeeUpdatedEvent
-): void {
-  let entity = new RegistrationFeeUpdated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.groupId = event.params.groupId
-  entity.fee = event.params.fee
+        merkleTree.root = event.params.merkleTreeRoot
+        merkleTree.size += identityCommitments.length
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+        merkleTree.save()
+    }
 }

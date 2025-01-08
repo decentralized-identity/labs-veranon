@@ -5,6 +5,7 @@
     "codegen": "graph codegen",
     "build": "graph build",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ veranon-subgraph",
+    "deploy:all": "yarn codegen && yarn build && yarn deploy",
     "create-local": "graph create --node http://localhost:8020/ veranon-subgraph",
     "remove-local": "graph remove --node http://localhost:8020/ veranon-subgraph",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 veranon-subgraph",
