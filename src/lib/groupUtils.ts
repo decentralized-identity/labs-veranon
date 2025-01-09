@@ -1,7 +1,7 @@
 import { request, gql } from 'graphql-request'
 import { Group } from '@semaphore-protocol/group'
 
-const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-subgraph/v1.1.0'
+const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-subgraph/v1.2.0'
 
 const GROUP_MEMBERS_QUERY = gql`
   query GetGroupMembers($groupId: ID!) {
@@ -43,6 +43,15 @@ const CHECK_MANAGER_QUERY = gql`
   }
 `
 
+const CHECK_SERVICE_PROVIDER_QUERY = gql`
+  query CheckServiceProvider($address: ID!) {
+    serviceProvider(id: $address) {
+      id
+      serviceProviderId
+    }
+  }
+`
+
 type GroupMember = {
   id: string
   index: number
@@ -76,6 +85,13 @@ type ManagerQueryResponse = {
     group: {
       id: string
     }
+  } | null
+}
+
+type ServiceProviderQueryResponse = {
+  serviceProvider: {
+    id: string
+    serviceProviderId: string
   } | null
 }
 
@@ -183,6 +199,40 @@ export class GroupUtils {
     } catch (error) {
       console.error('Error checking manager status:', error)
       return { isManager: false }
+    }
+  }
+
+  /**
+   * Checks if an address is a registered service provider
+   * @param address Ethereum address to check
+   * @returns Object containing isProvider status and providerId if they are registered
+   */
+  static async isServiceProvider(address: string): Promise<{
+    isProvider: boolean
+    providerId?: string
+  }> {
+    try {
+      if (!address) {
+        return { isProvider: false }
+      }
+
+      const data = await request<ServiceProviderQueryResponse>(
+        SUBGRAPH_URL,
+        CHECK_SERVICE_PROVIDER_QUERY,
+        { address: address.toLowerCase() }
+      )
+      
+      if (!data.serviceProvider) {
+        return { isProvider: false }
+      }
+
+      return {
+        isProvider: true,
+        providerId: data.serviceProvider.serviceProviderId
+      }
+    } catch (error) {
+      console.error('Error checking service provider status:', error)
+      return { isProvider: false }
     }
   }
 } 
