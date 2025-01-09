@@ -16,7 +16,7 @@ export function ManagerApproval() {
     if (!managerId.trim()) return
 
     try {
-      await writeContract({
+      writeContract({
         address: CONTRACT_ADDRESSES.SERVICE_PROVIDER,
         abi,
         functionName: 'setApprovedManager',

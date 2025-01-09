@@ -208,12 +208,12 @@ export class GroupUtils {
    * @returns Object containing isProvider status and providerId if they are registered
    */
   static async isServiceProvider(address: string): Promise<{
-    isProvider: boolean
-    providerId?: string
+    isServiceProvider: boolean
+    serviceProviderId?: string
   }> {
     try {
       if (!address) {
-        return { isProvider: false }
+        return { isServiceProvider: false }
       }
 
       const data = await request<ServiceProviderQueryResponse>(
@@ -223,16 +223,16 @@ export class GroupUtils {
       )
       
       if (!data.serviceProvider) {
-        return { isProvider: false }
+        return { isServiceProvider: false }
       }
 
       return {
-        isProvider: true,
-        providerId: data.serviceProvider.serviceProviderId
+        isServiceProvider: true,
+        serviceProviderId: data.serviceProvider.serviceProviderId
       }
     } catch (error) {
       console.error('Error checking service provider status:', error)
-      return { isProvider: false }
+      return { isServiceProvider: false }
     }
   }
 } 

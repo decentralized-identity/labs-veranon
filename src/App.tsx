@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { Header } from "./components/Header"
 import { Home } from "./components/Home"
 import { Manager } from "./components/Manager"
-import { Provider } from "./components/Provider"
+import { ServiceProvider } from "./components/ServiceProvider"
 import { MembersManagement } from "./components/manager/MembersManagement"
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/manager" element={<Manager />} />
             <Route path="/manager/members" element={<MembersManagement />} />
-            <Route path="/provider" element={<Provider />} />
+            <Route path="/service-provider" element={<ServiceProvider />} />
           </Routes>
         </main>
       </div>

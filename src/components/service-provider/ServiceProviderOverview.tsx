@@ -1,16 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Shield, Users, CheckCircle } from "lucide-react"
 
-type ProviderOverviewProps = {
-  providerId: number;
+type ServiceProviderOverviewProps = {
+  serviceProviderId: number;
 }
 
-export function ProviderOverview({ providerId }: ProviderOverviewProps) {
+export function ServiceProviderOverview({ serviceProviderId }: ServiceProviderOverviewProps) {
   return (
     <Card className="mb-8">
       <CardHeader>
         <CardTitle>Service Provider Overview</CardTitle>
-        <CardDescription>Provider ID: {providerId}</CardDescription>
+        <CardDescription>Service Provider ID: {serviceProviderId}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -18,7 +18,7 @@ export function ProviderOverview({ providerId }: ProviderOverviewProps) {
             <Shield className="h-8 w-8 text-muted-foreground" />
             <div>
               <p className="text-2xl font-bold">Active</p>
-              <p className="text-sm text-muted-foreground">Provider Status</p>
+              <p className="text-sm text-muted-foreground">Service Provider Status</p>
             </div>
           </div>
           

@@ -1,39 +1,39 @@
 import { useAccount } from 'wagmi'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { Skeleton } from "./ui/skeleton"
-import { RegisterProvider } from "./provider/RegisterProvider"
+import { RegisterServiceProvider } from "./service-provider/RegisterServiceProvider"
 import { GroupUtils } from "../lib/groupUtils"
 import { useEffect, useState } from 'react'
-import { ProviderOverview } from "./provider/ProviderOverview"
-import { ManagerApproval } from "./provider/ManagerApproval"
-import { VerificationSearch } from "./provider/VerificationSearch"
+import { ServiceProviderOverview } from "./service-provider/ServiceProviderOverview"
+import { ManagerApproval } from "./service-provider/ManagerApproval"
+import { VerificationSearch } from "./service-provider/VerificationSearch"
 
-type ProviderData = {
+type ServiceProviderData = {
   isRegistered: boolean;
-  providerId?: string;
+  serviceProviderId?: string;
 }
 
-export function Provider() {
+export function ServiceProvider() {
   const { address, status } = useAccount()
-  const [providerData, setProviderData] = useState<ProviderData | null>(null)
+  const [serviceProviderData, setServiceProviderData] = useState<ServiceProviderData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const checkProviderStatus = async () => {
+  const checkServiceProviderStatus = async () => {
     if (!address) {
-      setProviderData(null)
+      setServiceProviderData(null)
       setIsLoading(false)
       return
     }
 
     try {
-      const { isProvider, providerId } = await GroupUtils.isServiceProvider(address)
-      setProviderData({
-        isRegistered: isProvider,
-        providerId: providerId
+      const { isServiceProvider, serviceProviderId } = await GroupUtils.isServiceProvider(address)
+      setServiceProviderData({
+        isRegistered: isServiceProvider,
+        serviceProviderId: serviceProviderId
       })
     } catch (error) {
-      console.error('Error checking provider status:', error)
-      setProviderData(null)
+      console.error('Error checking service provider status:', error)
+      setServiceProviderData(null)
     } finally {
       setIsLoading(false)
     }
@@ -41,11 +41,11 @@ export function Provider() {
 
   useEffect(() => {
     setIsLoading(true)
-    checkProviderStatus()
+    checkServiceProviderStatus()
   }, [address])
 
   const handleRegistrationComplete = () => {
-    checkProviderStatus()
+    checkServiceProviderStatus()
   }
 
   // Show connect wallet prompt if not connected
@@ -56,7 +56,7 @@ export function Provider() {
           <CardHeader>
             <CardTitle>Connect Wallet</CardTitle>
             <CardDescription>
-              Please connect your wallet using the button in the header to access the provider dashboard
+              Please connect your wallet using the button in the header to access the service provider dashboard
             </CardDescription>
           </CardHeader>
         </Card>
@@ -81,10 +81,10 @@ export function Provider() {
   }
 
   // Show registration UI if not registered
-  if (!providerData?.isRegistered) {
+  if (!serviceProviderData?.isRegistered) {
     return (
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <RegisterProvider onRegistrationComplete={handleRegistrationComplete} />
+        <RegisterServiceProvider onRegistrationComplete={handleRegistrationComplete} />
       </div>
     )
   }
@@ -92,7 +92,7 @@ export function Provider() {
   // Show provider dashboard if connected and registered
   return (
     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <ProviderOverview providerId={parseInt(providerData.providerId || '0')} />
+      <ServiceProviderOverview serviceProviderId={parseInt(serviceProviderData.serviceProviderId || '0')} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         <ManagerApproval />
         <VerificationSearch />

@@ -39,10 +39,10 @@ export function Header() {
               For Managers
             </Link>
             <Link 
-              to="/provider" 
+              to="/service-provider" 
               className={cn(
                 "text-sm transition-colors",
-                isActive('/provider') ? "text-foreground font-medium" : "text-foreground/60 hover:text-foreground"
+                isActive('/service-provider') ? "text-foreground font-medium" : "text-foreground/60 hover:text-foreground"
               )}
             >
               For Service Providers

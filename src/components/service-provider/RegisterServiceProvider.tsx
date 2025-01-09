@@ -6,11 +6,11 @@ import { abi } from "../../contracts/artifacts/ServiceProvider.json"
 import { Check, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 
-type RegisterProviderProps = {
+type RegisterServiceProviderProps = {
   onRegistrationComplete?: () => void;
 }
 
-export function RegisterProvider({ onRegistrationComplete }: RegisterProviderProps) {
+export function RegisterServiceProvider({ onRegistrationComplete }: RegisterServiceProviderProps) {
   const [showSuccess, setShowSuccess] = useState(false)
   const [showError, setShowError] = useState(false)
   

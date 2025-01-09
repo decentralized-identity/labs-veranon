@@ -19,7 +19,7 @@ export function Home() {
           <a href="/manager">For Managers</a>
         </Button>
         <Button size="lg" variant="outline" asChild>
-          <a href="/provider">For Service Providers</a>
+          <a href="/service-provider">For Service Providers</a>
         </Button>
       </div>
     </div>
