@@ -15,7 +15,7 @@ async function testCreateGroup() {
 
   try {
     const group = await GroupUtils.createGroup(groupId)
-    console.log('Group successfully assembled.')
+    // console.log('Group successfully assembled.')
     console.log('Computed Merkle Root:', group.root.toString())
 
     // Get on-chain merkle root, size, and member status
@@ -43,6 +43,12 @@ async function testCreateGroup() {
     } else {
       console.log('❌ Merkle roots do not match!')
     }
+
+    // Log all identity commitments
+    console.log('\nIdentity Commitments:')
+    group.members.forEach((commitment, index) => {
+      console.log(`Member ${index + 1}: ${commitment.toString()}`)
+    })
 
   } catch (error) {
     console.error('Error:', error)
