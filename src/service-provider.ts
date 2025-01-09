@@ -1,3 +1,4 @@
+import { log } from "@graphprotocol/graph-ts"
 import {
   AccountVerified as AccountVerifiedEvent,
   ManagerApproved as ManagerApprovedEvent,
@@ -7,6 +8,7 @@ import {
   AccountVerified,
   ManagerApproved,
   ServiceProviderRegistered,
+  ServiceProvider,
 } from "../generated/schema"
 
 export function handleAccountVerified(event: AccountVerifiedEvent): void {
@@ -45,15 +47,22 @@ export function handleManagerApproved(event: ManagerApprovedEvent): void {
 export function handleServiceProviderRegistered(
   event: ServiceProviderRegisteredEvent,
 ): void {
-  let entity = new ServiceProviderRegistered(
-    event.transaction.hash.concatI32(event.logIndex.toI32()),
-  )
-  entity.serviceProviderId = event.params.serviceProviderId
-  entity.provider = event.params.provider
+  log.debug(`ServiceProviderRegistered event block: {}`, [event.block.number.toString()])
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  const serviceProvider = new ServiceProvider(event.params.provider.toHexString())
 
-  entity.save()
+  log.info("Creating service provider '{}' with ID '{}'", [
+    event.params.provider.toHexString(),
+    event.params.serviceProviderId.toString()
+  ])
+
+  // Set up ServiceProvider
+  serviceProvider.timestamp = event.block.timestamp
+  serviceProvider.serviceProviderId = event.params.serviceProviderId
+
+  serviceProvider.save()
+
+  log.info("ServiceProvider '{}' has been created", [
+    event.params.provider.toHexString()
+  ])
 }

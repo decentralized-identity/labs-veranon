@@ -60,3 +60,9 @@ type Manager @entity {
   groupId: BigInt!
   group: Group!
 }
+
+type ServiceProvider @entity {
+  id: ID! # address
+  timestamp: BigInt!
+  serviceProviderId: BigInt!
+}
