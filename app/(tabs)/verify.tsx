@@ -2,13 +2,15 @@
 import { Text, View, Pressable } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useRef, useState } from 'react';
-import { createWitnessInput } from '../../utils/createProof';
+import { createWitnessInput } from '../../utils/createWitnessInput';
 import { witnessCalculatorCode } from '@/utils/witnessCalculator';
+import { groth16Prove } from '@iden3/react-native-rapidsnark';
 
 export default function Verify() {
   const webviewRef = useRef<WebView>(null);
   const [witnessStatus, setWitnessStatus] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [zkeyBase64, setZkeyBase64] = useState<string>('');
 
   const htmlContent = `
   <html>
@@ -69,7 +71,8 @@ export default function Verify() {
     setWitnessStatus('Preparing witness data...');
 
     try {
-      const { wasmBase64, input } = await createWitnessInput();
+      const { wasmBase64, input, zkeyBase64 } = await createWitnessInput();
+      setZkeyBase64(zkeyBase64);
       
       // Serialize input for JavaScript
       const serializedInput = JSON.stringify(input, (_, value) => 
@@ -92,7 +95,7 @@ export default function Verify() {
     }
   };
 
-  const handleMessage = (event: any) => {
+  const handleMessage = async (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       
@@ -103,14 +106,10 @@ export default function Verify() {
       } else if (data.witness) {
         setWitnessStatus('Witness generated successfully!');
         
-        // Log the first few bytes of the witness for debugging
-        const witnessBytes = atob(data.witness).slice(0, 32);
-        console.log('First 32 bytes of witness:', 
-          Array.from(witnessBytes).map(b => b.charCodeAt(0).toString(16).padStart(2, '0')).join(' ')
-        );
+        // React Native Rapidsnark proof generation
+        const proof = await groth16Prove(zkeyBase64, data.witness);
+        console.log("proof", proof);
         
-        // Store or process the witness for the next step
-        // await processWitness(data.witness);
       }
     } catch (error) {
       console.error('Error processing WebView message:', error);
