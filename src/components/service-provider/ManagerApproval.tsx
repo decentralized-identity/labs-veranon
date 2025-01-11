@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useWriteContract } from 'wagmi'
+import { useState, useEffect } from "react"
+import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Button } from "../ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
@@ -10,7 +10,13 @@ import { Check, Loader2 } from "lucide-react"
 export function ManagerApproval() {
   const [managerId, setManagerId] = useState("")
   const [showSuccess, setShowSuccess] = useState(false)
-  const { writeContract, isPending, isError } = useWriteContract()
+  const [showError, setShowError] = useState(false)
+
+  const { writeContract, data: hash, isPending } = useWriteContract()
+  
+  const { isLoading: isConfirming, isSuccess, isError } = useWaitForTransactionReceipt({
+    hash,
+  })
 
   const handleApproveManager = async () => {
     if (!managerId.trim()) return
@@ -23,20 +29,34 @@ export function ManagerApproval() {
         args: [BigInt(managerId)],
         chain: null,
         account: undefined,
-      } as const, {
-        onSuccess: () => {
-          setManagerId("")
-          setShowSuccess(true)
-          setTimeout(() => setShowSuccess(false), 3000)
-        },
-        onError: (error) => {
-          console.error('Failed to approve manager:', error)
-        }
-      })
+      } as const)
     } catch (error) {
       console.error('Error in handleApproveManager:', error)
     }
   }
+
+  // Handle success state
+  useEffect(() => {
+    if (isSuccess) {
+      setManagerId("")
+      setShowSuccess(true)
+      const timer = setTimeout(() => {
+        setShowSuccess(false)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [isSuccess])
+
+  // Handle error state
+  useEffect(() => {
+    if (isError) {
+      setShowError(true)
+      const timer = setTimeout(() => {
+        setShowError(false)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [isError])
 
   return (
     <Card>
@@ -51,36 +71,33 @@ export function ManagerApproval() {
           placeholder="Enter manager ID..."
           value={managerId}
           onChange={(e) => {
-            // Only allow numbers
             const value = e.target.value.replace(/[^0-9]/g, '')
             setManagerId(value)
           }}
           type="number"
-          disabled={isPending}
+          disabled={isPending || isConfirming}
         />
         <div className="flex items-center gap-4">
           <Button 
             onClick={handleApproveManager} 
-            disabled={isPending || !managerId.trim()}
+            disabled={isPending || isConfirming || !managerId.trim()}
           >
-            {isPending && (
+            {(isPending || isConfirming) && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            Approve Manager
+            {isPending ? 'Confirming Transaction...' : 
+             isConfirming ? 'Approving Manager...' : 
+             'Approve Manager'}
           </Button>
           
-          {showSuccess && (
-            <div className="flex items-center text-sm text-green-500">
-              <Check className="mr-1 h-4 w-4" />
-              Manager approved successfully
-            </div>
-          )}
+          <div className={`flex items-center text-sm text-green-500 whitespace-nowrap ${showSuccess ? 'opacity-100' : 'opacity-0'} transition-all duration-1000`}>
+            <Check className="mr-1 h-4 w-4" />
+            Manager approved successfully
+          </div>
 
-          {isError && (
-            <div className="flex items-center text-sm text-red-500">
-              Failed to approve manager
-            </div>
-          )}
+          <div className={`flex items-center text-sm text-red-500 whitespace-nowrap ${showError ? 'opacity-100' : 'opacity-0'} transition-all duration-1000`}>
+            Failed to approve manager
+          </div>
         </div>
       </CardContent>
     </Card>
