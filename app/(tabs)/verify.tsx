@@ -1,4 +1,3 @@
-// app/(tabs)/verify.tsx
 import { Text, View, Pressable } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useRef, useState } from 'react';
@@ -71,7 +70,10 @@ export default function Verify() {
     setWitnessStatus('Preparing witness data...');
 
     try {
-      const { wasmBase64, input, zkeyBase64 } = await createWitnessInput();
+      // TODO: get scope and message from UI inputs
+      const scope = "2";
+      const message = "3";
+      const { wasmBase64, input, zkeyBase64 } = await createWitnessInput(scope, message);
       setZkeyBase64(zkeyBase64);
       
       // Serialize input for JavaScript
@@ -97,23 +99,18 @@ export default function Verify() {
 
   const handleMessage = async (event: any) => {
     try {
-      const data = JSON.parse(event.nativeEvent.data);
-      
-      if (data.error) {
-        setWitnessStatus('Error: ' + data.error);
-        console.error('Witness generation error:', data.error);
-        if (data.stack) console.error('Stack:', data.stack);
-      } else if (data.witness) {
-        setWitnessStatus('Witness generated successfully!');
+        const data = JSON.parse(event.nativeEvent.data);
         
-        // React Native Rapidsnark proof generation
-        const proof = await groth16Prove(zkeyBase64, data.witness);
-        console.log("proof", proof);
-        
-      }
+        if (data.witness) {
+            const proof = await groth16Prove(zkeyBase64, data.witness);
+
+            console.log("\nVerification Inputs:");
+            console.log("------------------------");
+            console.log("Proof:", JSON.stringify(JSON.parse(proof.proof), null, 2));
+            console.log("Public Signals:", JSON.stringify(JSON.parse(proof.pub_signals), null, 2));
+        }
     } catch (error) {
-      console.error('Error processing WebView message:', error);
-      setWitnessStatus('Error processing witness data');
+        console.error("Error:", error);
     }
     setIsLoading(false);
   };

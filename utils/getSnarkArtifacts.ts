@@ -1,6 +1,4 @@
-// lib/artifacts.ts
 import { File, Directory, Paths } from 'expo-file-system/next';
-import type { SnarkArtifacts } from '@zk-kit/artifacts';
 
 const BASE_URL = 'https://snark-artifacts.pse.dev';
 const PROJECT = 'semaphore';
@@ -8,6 +6,11 @@ const PROJECT = 'semaphore';
 interface ArtifactOptions {
     version?: string;
     parameters?: (string | number)[];
+}
+
+interface SnarkArtifacts {
+    wasm: string;
+    zkey: string;
 }
 
 async function getArtifactUrls(options: ArtifactOptions = {}): Promise<SnarkArtifacts> {
@@ -19,7 +22,7 @@ async function getArtifactUrls(options: ArtifactOptions = {}): Promise<SnarkArti
 
     return {
         wasm: `${baseUrl}${parameters}.wasm`,
-        zkey: `${baseUrl}${parameters}.zkey`,
+        zkey: `${baseUrl}${parameters}.zkey`
     };
 }
 

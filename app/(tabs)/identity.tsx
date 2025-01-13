@@ -16,7 +16,6 @@ export default function IdentityScreen() {
     try {
       const storedIdentity = await SecureStore.getItemAsync(PRIVATE_KEY_KEY);
       if (storedIdentity) {
-        // Use the proper import method to recreate identity from stored base64 string
         const identity = Identity.import(storedIdentity);
         setIdentityCommitment(identity.commitment.toString());
         console.log("Found existing identity commitment:", identity.commitment.toString());
@@ -28,26 +27,20 @@ export default function IdentityScreen() {
 
   const handlePress = async () => {
     try {
-      const storedIdentity = await SecureStore.getItemAsync(PRIVATE_KEY_KEY);
-      
-      if (storedIdentity) {
-        // If we already have an identity, just display it
-        const identity = Identity.import(storedIdentity);
-        console.log("Using existing identity commitment:", identity.commitment.toString());
-        return;
-      }
-
-      // Create a new random identity
+      // Always create a new identity
       const identity = new Identity();
-      
-      // Export the identity to base64 string for storage
       const exportedIdentity = identity.export();
+      
+      // Store the new identity
       await SecureStore.setItemAsync(PRIVATE_KEY_KEY, exportedIdentity);
       
+      // Update state and log
       setIdentityCommitment(identity.commitment.toString());
       
-      console.log("New Semaphore Identity Created!");
+      console.log("\nNew Identity Created:");
+      console.log("------------------------");
       console.log("Commitment:", identity.commitment.toString());
+      console.log("------------------------\n");
     } catch (error) {
       console.error("Error creating/storing identity:", error);
     }
@@ -60,13 +53,13 @@ export default function IdentityScreen() {
         onPress={handlePress}
       >
         <Text className="text-white font-semibold text-lg">
-          {identityCommitment ? 'Check Identity' : 'Create Identity'}
+          Create New Identity
         </Text>
       </Pressable>
 
       {identityCommitment && (
         <Text className="mt-4 text-gray-700 text-center">
-          Identity Commitment:{'\n'}{identityCommitment}
+          Current Identity Commitment:{'\n'}{identityCommitment}
         </Text>
       )}
     </View>

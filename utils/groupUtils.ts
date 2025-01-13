@@ -1,15 +1,18 @@
 import { request, gql } from 'graphql-request'
 import { Group } from '@semaphore-protocol/group'
 
-const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-test-1/v0.3.0'
+const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-subgraph/v1.2.0'
 
 const GROUP_MEMBERS_QUERY = gql`
   query GetGroupMembers($groupId: ID!) {
     group(id: $groupId) {
       id
-      memberCount
-      merkleTreeRoot
-      members(where: { active: true }, orderBy: index, orderDirection: asc) {
+      merkleTree {
+        size
+        root
+        depth
+      }
+      members(orderBy: index) {
         id
         index
         identityCommitment
@@ -21,7 +24,30 @@ const GROUP_MEMBERS_QUERY = gql`
 const GROUP_MEMBER_COUNT_QUERY = gql`
   query GetGroupMemberCount($groupId: ID!) {
     group(id: $groupId) {
-      memberCount
+      merkleTree {
+        size
+      }
+    }
+  }
+`
+
+const CHECK_MANAGER_QUERY = gql`
+  query CheckManager($address: ID!) {
+    manager(id: $address) {
+      id
+      groupId
+      group {
+        id
+      }
+    }
+  }
+`
+
+const CHECK_SERVICE_PROVIDER_QUERY = gql`
+  query CheckServiceProvider($address: ID!) {
+    serviceProvider(id: $address) {
+      id
+      serviceProviderId
     }
   }
 `
@@ -35,16 +61,38 @@ type GroupMember = {
 type GroupQueryResponse = {
   group: {
     id: string
-    memberCount: number
-    merkleTreeRoot: string
+    merkleTree: {
+      size: number
+      root: string
+      depth: number
+    }
     members: GroupMember[]
   }
 }
 
 type GroupMemberCountResponse = {
   group: {
-    memberCount: number
+    merkleTree: {
+      size: number
+    }
   }
+}
+
+type ManagerQueryResponse = {
+  manager: {
+    id: string
+    groupId: string
+    group: {
+      id: string
+    }
+  } | null
+}
+
+type ServiceProviderQueryResponse = {
+  serviceProvider: {
+    id: string
+    serviceProviderId: string
+  } | null
 }
 
 export class GroupUtils {
@@ -53,15 +101,22 @@ export class GroupUtils {
    */
   static async fetchGroupMembers(groupId: string | number): Promise<GroupMember[]> {
     try {
-      const data = await request<GroupQueryResponse>(
-        SUBGRAPH_URL, 
-        GROUP_MEMBERS_QUERY, 
-        { groupId: groupId.toString() }
-      )
-      return data.group.members
+        const variables = { groupId: groupId.toString() };
+
+        const data = await request<GroupQueryResponse>(
+            SUBGRAPH_URL, 
+            GROUP_MEMBERS_QUERY, 
+            variables
+        );
+        
+        if (!data?.group) {
+            return [];
+        }
+
+        return data.group.members || [];
     } catch (error) {
-      console.error('Error fetching group members:', error)
-      throw error
+        console.error('Error fetching group members:', error);
+        throw error;
     }
   }
 
@@ -105,19 +160,86 @@ export class GroupUtils {
   }
 
   /**
-   * Gets the active member count for a group
+   * Gets the active member count for a group by filtering out zero commitments
    */
   static async getActiveMemberCount(groupId: string | number): Promise<number> {
     try {
-      const data = await request<GroupMemberCountResponse>(
-        SUBGRAPH_URL,
-        GROUP_MEMBER_COUNT_QUERY,
-        { groupId: groupId.toString() }
-      )
-      return data.group.memberCount
+      const members = await this.fetchGroupMembers(groupId)
+      // Filter out members with zero identity commitments and count remaining
+      return members.filter(member => 
+        BigInt(member.identityCommitment) !== BigInt(0)
+      ).length
     } catch (error) {
       console.error('Error fetching member count:', error)
       return 0
+    }
+  }
+
+  /**
+   * Checks if an address is a registered manager and returns their group details
+   * @param address Ethereum address to check
+   * @returns Object containing isManager status, groupId, and memberCount if they are a manager
+   */
+  static async isManager(address: string): Promise<{
+    isManager: boolean
+    groupId?: string
+  }> {
+    try {
+      if (!address) {
+        return { isManager: false }
+      }
+
+      const data = await request<ManagerQueryResponse>(
+        SUBGRAPH_URL,
+        CHECK_MANAGER_QUERY,
+        { address: address.toLowerCase() }
+      )
+      
+      if (!data.manager) {
+        return { isManager: false }
+      }
+
+      return {
+        isManager: true,
+        groupId: data.manager.groupId
+      }
+    } catch (error) {
+      console.error('Error checking manager status:', error)
+      return { isManager: false }
+    }
+  }
+
+  /**
+   * Checks if an address is a registered service provider
+   * @param address Ethereum address to check
+   * @returns Object containing isProvider status and providerId if they are registered
+   */
+  static async isServiceProvider(address: string): Promise<{
+    isServiceProvider: boolean
+    serviceProviderId?: string
+  }> {
+    try {
+      if (!address) {
+        return { isServiceProvider: false }
+      }
+
+      const data = await request<ServiceProviderQueryResponse>(
+        SUBGRAPH_URL,
+        CHECK_SERVICE_PROVIDER_QUERY,
+        { address: address.toLowerCase() }
+      )
+      
+      if (!data.serviceProvider) {
+        return { isServiceProvider: false }
+      }
+
+      return {
+        isServiceProvider: true,
+        serviceProviderId: data.serviceProvider.serviceProviderId
+      }
+    } catch (error) {
+      console.error('Error checking service provider status:', error)
+      return { isServiceProvider: false }
     }
   }
 } 
