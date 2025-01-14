@@ -1,13 +1,11 @@
-// lib/semaphore.ts
 import { Identity } from "@semaphore-protocol/identity"
 import { GroupUtils } from './groupUtils'
 import * as SecureStore from 'expo-secure-store';
 import { maybeGetSnarkArtifacts } from './getSnarkArtifacts';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system/next';
 import { hash } from "./hash"
 
 const PRIVATE_KEY_KEY = 'semaphore_private_key-1';
-const GROUP_ID = '2';
 
 // Custom type for our witness generation needs
 type WitnessInput = {
@@ -23,6 +21,8 @@ type WitnessInput = {
     };
 }
 
+const GROUP_ID = 2;
+
 export async function createWitnessInput(scope: string, message: string): Promise<WitnessInput> {
     try {
         // Get identity from secure storage
@@ -34,39 +34,43 @@ export async function createWitnessInput(scope: string, message: string): Promis
         const identity = Identity.import(storedIdentity);
         const group = await GroupUtils.createGroup(GROUP_ID);
 
-        const groupDepth = group.depth;
-
-        // Get artifacts and convert WASM to base64
-        const snarkArtifacts = await maybeGetSnarkArtifacts({
-            parameters: [groupDepth],
-            version: "4.0.0"
-        });
-
-        const wasmBase64 = await FileSystem.readAsStringAsync(snarkArtifacts.wasm, {
-            encoding: FileSystem.EncodingType.Base64
-        });
-
-        const zkeyBase64 = await FileSystem.readAsStringAsync(snarkArtifacts.zkey, {
-            encoding: FileSystem.EncodingType.Base64
-        });
-
-        // Prepare the input for the circuit
         const leafIndex = group.indexOf(identity.commitment);
         const merkleProof = group.generateMerkleProof(leafIndex);
 
         const merkleProofIndices: number[] = [];
         const merkleProofSiblings = merkleProof.siblings;
+        const merkleProofLength = merkleProofSiblings.length;
 
-        for (let i = 0; i < groupDepth; i += 1) {
-            merkleProofIndices.push((merkleProof.index >> i) & 1);
-            if (merkleProofSiblings[i] === undefined) {
-                merkleProofSiblings[i] = 0n;
-            }
+        // Get artifacts and convert WASM to base64
+        const snarkArtifacts = await maybeGetSnarkArtifacts({
+            parameters: [merkleProofLength],
+            version: "4.0.0"
+        });
+
+        const wasmFile = new File(snarkArtifacts.wasm);
+        const zkeyFile = new File(snarkArtifacts.zkey);
+        
+        const wasmBase64 = wasmFile.base64();
+        const zkeyBase64 = zkeyFile.base64();
+
+        console.log("--------------------------------")
+        console.log("Merkle proof siblings:", merkleProofSiblings);
+        console.log("Merkle proof length:", merkleProofLength);
+        
+        for (let i = 0; i < merkleProofLength; i += 1) {
+          merkleProofIndices.push((merkleProof.index >> i) & 1);
+          if (merkleProofSiblings[i] === undefined) {
+            merkleProofSiblings[i] = 0n;
+          }
         }
+
+        console.log("Merkle proof indices:", merkleProofIndices);
+        console.log("--------------------------------")
+        console.log("Identity commitment:", identity.commitment.toString());
 
         const input = {
             secret: identity.secretScalar,
-            merkleProofLength: merkleProof.siblings.length,
+            merkleProofLength,
             merkleProofIndices,
             merkleProofSiblings,
             scope: hash(scope),
