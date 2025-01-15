@@ -1,0 +1,68 @@
+type MerkleTree @entity {
+    id: ID!
+    depth: Int!
+    root: BigInt
+    size: Int!
+    group: Group!
+}
+
+type Group @entity {
+    id: ID!
+    timestamp: BigInt!
+    merkleTree: MerkleTree!
+    admin: Bytes
+    members: [Member!] @derivedFrom(field: "group")
+}
+
+type Member @entity {
+    id: ID!
+    timestamp: BigInt!
+    identityCommitment: BigInt!
+    index: Int!
+    group: Group!
+}
+
+type AccountVerified @entity(immutable: true) {
+  id: Bytes!
+  groupId: BigInt! # uint256
+  merkleTreeDepth: BigInt! # uint256
+  merkleTreeRoot: BigInt! # uint256
+  nullifier: BigInt! # uint256
+  message: BigInt! # uint256
+  scope: BigInt! # uint256
+  points: [BigInt!]! # uint256[8]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ManagerApproved @entity(immutable: true) {
+  id: Bytes!
+  provider: Bytes! # address
+  groupId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ServiceProviderRegistered @entity(immutable: true) {
+  id: Bytes!
+  serviceProviderId: BigInt! # uint256
+  provider: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Manager @entity {
+  id: ID! # address
+  timestamp: BigInt!
+  groupId: BigInt!
+  group: Group!
+}
+
+type ServiceProvider @entity {
+  id: ID! # address
+  timestamp: BigInt!
+  serviceProviderId: BigInt!
+}
