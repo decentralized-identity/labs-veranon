@@ -3,8 +3,8 @@
 ### Getting Started with Development
 
 ```bash
-npm install
-npm run dev
+yarn install
+yarn dev
 ```
 
 ### Purpose
