@@ -10,7 +10,7 @@ const PRIVATE_KEY_KEY = 'semaphore_private_key-1';
 // Custom type for our witness generation needs
 type WitnessInput = {
     wasmBase64: string;
-    zkeyBase64: string;
+    zkeyFilePath: string;
     input: {
         secret: bigint;
         merkleProofLength: number;
@@ -46,12 +46,8 @@ export async function createWitnessInput(scope: string, message: string): Promis
             parameters: [merkleProofLength],
             version: "4.0.0"
         });
-
-        const wasmFile = new File(snarkArtifacts.wasm);
-        const zkeyFile = new File(snarkArtifacts.zkey);
         
-        const wasmBase64 = wasmFile.base64();
-        const zkeyBase64 = zkeyFile.base64();
+        const wasmBase64 = (new File(snarkArtifacts.wasm)).base64();
 
         console.log("--------------------------------")
         console.log("Merkle proof siblings:", merkleProofSiblings);
@@ -79,7 +75,7 @@ export async function createWitnessInput(scope: string, message: string): Promis
 
         return {
             wasmBase64,
-            zkeyBase64,
+            zkeyFilePath: snarkArtifacts.zkey,
             input
         };
 
