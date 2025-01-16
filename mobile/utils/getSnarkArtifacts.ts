@@ -29,7 +29,15 @@ async function getArtifactUrls(options: ArtifactOptions = {}): Promise<SnarkArti
 async function downloadArtifact(url: string, outputPath: File): Promise<void> {
     try {
         if (!outputPath.exists) {
-            outputPath.parentDirectory.create();
+            if (!outputPath.parentDirectory.exists) {
+                try {
+                    outputPath.parentDirectory.create();
+                } catch (error: unknown) {
+                    if (error instanceof Error && !error.message?.includes('directory already exists')) {
+                        throw error;
+                    }
+                }
+            }
             await File.downloadFileAsync(url, outputPath);
         }
     } catch (error) {
@@ -43,10 +51,17 @@ export async function maybeGetSnarkArtifacts(
 ): Promise<SnarkArtifacts> {
     const urls = await getArtifactUrls(options);
     
-    // Create artifacts directory in app's cache
+    // Create artifacts directory in app's cache, handle existing directory
     const artifactsDir = new Directory(Paths.cache, 'snark-artifacts');
     if (!artifactsDir.exists) {
-        artifactsDir.create();
+        try {
+            artifactsDir.create();
+        } catch (error) {
+            // Ignore directory exists error
+            if (error instanceof Error && !error.message?.includes('directory already exists')) {
+                throw error;
+            }
+        }
     }
 
     // Extract filenames from URLs
