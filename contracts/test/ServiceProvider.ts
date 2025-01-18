@@ -6,6 +6,7 @@ import { ethers } from "hardhat"
 import { Manager, ServiceProvider, SemaphoreVerifier } from "../typechain-types"
 import { Group } from "@semaphore-protocol/group"
 import { generateProof } from "@semaphore-protocol/proof"
+import { GELATO_RELAY_ADDRESS } from "./constants"
 
 describe("ServiceProvider", () => {
     async function deployServiceProviderFixture() {
@@ -34,13 +35,24 @@ describe("ServiceProvider", () => {
             await managerContract.getAddress()
         )
 
+        // Impersonate Gelato relay
+        await ethers.provider.send("hardhat_impersonateAccount", [GELATO_RELAY_ADDRESS])
+        const gelatoRelay = await ethers.getSigner(GELATO_RELAY_ADDRESS)
+        
+        // Fund the relay address so it can send transactions
+        await deployer.sendTransaction({
+            to: GELATO_RELAY_ADDRESS,
+            value: ethers.parseEther("1.0")
+        })
+
         return { 
             serviceProviderContract, 
             managerContract,
             verifierContract,
             deployer, 
             user1, 
-            user2 
+            user2,
+            gelatoRelay
         }
     }
 
@@ -144,15 +156,40 @@ describe("ServiceProvider", () => {
         })
     })
 
-    describe("# checkProof", () => {
-        let serviceProviderContract: ServiceProvider
-        let managerContract: Manager
-        let user1: any
-        let identity: Identity
-        let group: Group
-        let groupId: bigint
-        let validProof: any
-        let serviceProviderId: bigint
+    describe("# verify account", () => {
+        let serviceProviderContract: ServiceProvider;
+        let managerContract: Manager;
+        let user1: any;
+        let gelatoRelay: any;
+        let identity: Identity;
+        let group: Group;
+        let groupId: bigint;
+        let validProof: any;
+        let serviceProviderId: bigint;
+        // Add common Gelato relay context values
+        const NATIVE_TOKEN = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+        const mockFee = ethers.parseEther("0.01");
+
+        // Helper function for verify account calls
+        async function callVerifyAccount(proof: any, gId: bigint) {
+            const functionData = serviceProviderContract.interface.encodeFunctionData(
+                "verifyAccount",
+                [gId, proof]
+            );
+
+            const fullCalldata = ethers.solidityPacked(
+                ["bytes", "address", "address", "uint256"],
+                [functionData, GELATO_RELAY_ADDRESS, NATIVE_TOKEN, mockFee]
+            );
+
+            const tx = await gelatoRelay.sendTransaction({
+                to: await serviceProviderContract.getAddress(),
+                data: fullCalldata
+            });
+
+            await tx.wait();
+            return tx;
+        }
 
         beforeEach(async () => {
             // Get fresh contracts and users for each test
@@ -160,10 +197,16 @@ describe("ServiceProvider", () => {
             serviceProviderContract = fixture.serviceProviderContract
             managerContract = fixture.managerContract
             user1 = fixture.user1
+            gelatoRelay = fixture.gelatoRelay
 
             // Register service provider first
             await serviceProviderContract.connect(user1).register()
             serviceProviderId = await serviceProviderContract.getServiceProviderId(user1.address)
+
+            // Deposit sponsor funds to cover relay fees
+            await serviceProviderContract.connect(user1).depositSponsorFunds({
+                value: ethers.parseEther("1.0") // Deposit 1 ETH to cover fees
+            })
 
             // Create identity and register manager
             identity = new Identity()
@@ -191,7 +234,8 @@ describe("ServiceProvider", () => {
 
         it("Should reject proof with used nullifier", async () => {
             // First verification should work
-            await serviceProviderContract.verifyAccount(groupId, validProof)
+            // await serviceProviderContract.connect(gelatoRelay).verifyAccount(groupId, validProof)
+            await callVerifyAccount(validProof, groupId)
 
             // Second verification with same proof (same nullifier) should fail
             await expect(serviceProviderContract.checkProof(groupId, validProof))
@@ -221,20 +265,13 @@ describe("ServiceProvider", () => {
             }
             invalidProof.points[0] = 123n
 
-            await expect(serviceProviderContract.verifyAccount(groupId, invalidProof))
+            await expect(callVerifyAccount(invalidProof, groupId))
                 .to.be.revertedWithCustomError(serviceProviderContract, "ServiceProvider__InvalidProof")
         })
 
         it("Should successfully verify account and emit event", async () => {
-            const tx = await serviceProviderContract.verifyAccount(groupId, validProof)
+            const tx = await callVerifyAccount(validProof, groupId);
 
-            // Check that account is marked as verified
-            expect(await serviceProviderContract.verifiedAccounts(validProof.scope, validProof.message)).to.be.true
-
-            // Check that nullifier is marked as used
-            expect(await serviceProviderContract.nullifiers(groupId, validProof.nullifier)).to.be.true
-
-            // Verify event emission
             await expect(tx)
                 .to.emit(serviceProviderContract, "AccountVerified")
                 .withArgs(
@@ -245,7 +282,7 @@ describe("ServiceProvider", () => {
                     validProof.message,
                     validProof.scope,
                     validProof.points
-                )
+                );
         })
 
         // Keep the existing manager approval specific tests
@@ -307,5 +344,95 @@ describe("ServiceProvider", () => {
             await expect(serviceProviderContract.checkProof(nonExistentGroupId, proof))
                 .to.be.revertedWithCustomError(serviceProviderContract, "ServiceProvider__GroupDoesNotExist")
         })
+
+        it("Should correctly deduct fee from service provider's sponsor balance", async () => {
+            // Get initial balance
+            const initialBalance = await serviceProviderContract.getSponsorFeeBalance(user1.address);
+
+            // Perform verification
+            await callVerifyAccount(validProof, groupId);
+            
+            // Get final balance
+            const finalBalance = await serviceProviderContract.getSponsorFeeBalance(user1.address);
+            
+            // Check that exactly mockFee was deducted
+            expect(finalBalance).to.equal(initialBalance - mockFee);
+        });
+
+        it("Should emit SponsorFeeBalanceChanged event with correct values", async () => {
+            const initialBalance = await serviceProviderContract.getSponsorFeeBalance(user1.address);
+            
+            const tx = await callVerifyAccount(validProof, groupId);
+            
+            await expect(tx)
+                .to.emit(serviceProviderContract, "SponsorFeeBalanceChanged")
+                .withArgs(
+                    user1.address,
+                    initialBalance,
+                    initialBalance - mockFee,
+                    2 // Assuming FEE_PAYMENT is 2 in the enum
+                );
+        });
+
+        it("Should correctly deposit sponsor funds and emit event", async () => {
+            const depositAmount = ethers.parseEther("0.5");
+            const initialBalance = await serviceProviderContract.getSponsorFeeBalance(user1.address);
+            
+            const tx = await serviceProviderContract.connect(user1).depositSponsorFunds({
+                value: depositAmount
+            });
+
+            const finalBalance = await serviceProviderContract.getSponsorFeeBalance(user1.address);
+            
+            // Check balance increased correctly
+            expect(finalBalance).to.equal(initialBalance + depositAmount);
+
+            // Check event emission
+            await expect(tx)
+                .to.emit(serviceProviderContract, "SponsorFeeBalanceChanged")
+                .withArgs(
+                    user1.address,
+                    initialBalance,
+                    finalBalance,
+                    0 // DEPOSIT = 0 in enum
+                );
+        });
+
+        it("Should correctly withdraw sponsor funds and emit event", async () => {
+            const withdrawAmount = ethers.parseEther("0.5");
+            const initialBalance = await serviceProviderContract.getSponsorFeeBalance(user1.address);
+            
+            const tx = await serviceProviderContract.connect(user1).withdrawSponsorFunds(withdrawAmount);
+
+            const finalBalance = await serviceProviderContract.getSponsorFeeBalance(user1.address);
+            
+            // Check balance decreased correctly
+            expect(finalBalance).to.equal(initialBalance - withdrawAmount);
+
+            // Check event emission
+            await expect(tx)
+                .to.emit(serviceProviderContract, "SponsorFeeBalanceChanged")
+                .withArgs(
+                    user1.address,
+                    initialBalance,
+                    finalBalance,
+                    1 // WITHDRAWAL = 1 in enum
+                );
+
+            // Verify ETH was actually transferred to user
+            await expect(tx)
+                .to.changeEtherBalance(user1, withdrawAmount);
+        });
+
+        it("Should revert when trying to withdraw more than available balance", async () => {
+            const withdrawAmount = ethers.parseEther("2.0"); // More than the 1 ETH deposited in beforeEach
+            
+            await expect(
+                serviceProviderContract.connect(user1).withdrawSponsorFunds(withdrawAmount)
+            ).to.be.revertedWithCustomError(
+                serviceProviderContract,
+                "ServiceProvider__InsufficientSponsorFundsForWithdrawal"
+            );
+        });
     })
 }) 

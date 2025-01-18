@@ -5,6 +5,12 @@ import {ISemaphoreVerifier} from "@semaphore-protocol/contracts/interfaces/ISema
 import {IManager} from "./IManager.sol";
 
 interface IServiceProvider {
+    enum SponsorFeeAction {
+        DEPOSIT,
+        WITHDRAWAL,
+        FEE_PAYMENT
+    }
+    
     error ServiceProvider__AlreadyRegistered();
     error ServiceProvider__NotRegistered();
     error ServiceProvider__GroupDoesNotExist();
@@ -16,9 +22,12 @@ interface IServiceProvider {
     error ServiceProvider__InsufficientFee();
     error ServiceProvider__FeeTransferFailed();
     error ServiceProvider__ManagerAlreadyApproved();
+    error ServiceProvider__InsufficientSponsorFeeBalance();
+    error ServiceProvider__InsufficientSponsorFundsForWithdrawal();
+    error ServiceProvider__WithdrawSponsorFundsFailed();
 
-    event ServiceProviderRegistered(uint256 indexed serviceProviderId, address indexed provider);
-    event ManagerApproved(address indexed provider, uint256 indexed groupId);
+    event ServiceProviderRegistered(uint256 indexed serviceProviderId, address indexed serviceProvider);
+    event ManagerApproved(address indexed serviceProvider, uint256 indexed groupId);
     event AccountVerified(
         uint256 indexed groupId,
         uint256 indexed merkleTreeDepth,
@@ -28,10 +37,18 @@ interface IServiceProvider {
         uint256 scope,
         uint256[8] points
     );
+    event SponsorFeeBalanceChanged(
+        address indexed serviceProvider,
+        uint256 previousBalance,
+        uint256 newBalance,
+        SponsorFeeAction action
+    );
+
 
     struct ServiceProviderData {
         uint256 serviceProviderId;
         mapping(uint256 managerId => bool isApproved) approvedManagers;
+        uint256 sponsorFeeBalance;
     }
 
     struct SemaphoreProof {

@@ -5,11 +5,12 @@ import {ISemaphoreVerifier} from "@semaphore-protocol/contracts/interfaces/ISema
 import {IServiceProvider} from "./interfaces/IServiceProvider.sol";
 import {IManager} from "./interfaces/IManager.sol";
 import {MIN_DEPTH, MAX_DEPTH} from "@semaphore-protocol/contracts/base/Constants.sol";
+import {GelatoRelayContext} from "@gelatonetwork/relay-context/contracts/GelatoRelayContext.sol";
 
 /// @title ServiceProvider
 /// @notice Contract for managing service providers and verifying Semaphore proofs
 /// @dev Implements proof verification and account management for service providers
-contract ServiceProvider is IServiceProvider {
+contract ServiceProvider is IServiceProvider, GelatoRelayContext {
     ISemaphoreVerifier public immutable verifier;
     IManager public immutable manager;
     uint256 public serviceProviderCounter;
@@ -83,6 +84,42 @@ contract ServiceProvider is IServiceProvider {
         _serviceProviders[msg.sender].approvedManagers[managerId] = false;
     }
 
+    /// @notice Allows service providers to deposit funds for covering relay fees
+    /// @dev Adds the sent value to the service provider's sponsor fee balance
+    function depositSponsorFunds() external payable onlyRegisteredServiceProvider {
+        uint256 previousBalance = _serviceProviders[msg.sender].sponsorFeeBalance;
+        _serviceProviders[msg.sender].sponsorFeeBalance += msg.value;
+        emit SponsorFeeBalanceChanged(
+            msg.sender,
+            previousBalance,
+            _serviceProviders[msg.sender].sponsorFeeBalance,
+            SponsorFeeAction.DEPOSIT
+        );
+    }
+
+    /// @notice Allows service providers to withdraw their remaining balance
+    /// @param amount The amount to withdraw
+    function withdrawSponsorFunds(uint256 amount) external onlyRegisteredServiceProvider {
+        uint256 previousBalance = _serviceProviders[msg.sender].sponsorFeeBalance;
+        if (amount > previousBalance) {
+            revert ServiceProvider__InsufficientSponsorFundsForWithdrawal();
+        }
+        
+        _serviceProviders[msg.sender].sponsorFeeBalance -= amount;
+        
+        (bool success, ) = msg.sender.call{value: amount}("");
+        if (!success) {
+            revert ServiceProvider__WithdrawSponsorFundsFailed();
+        }
+        
+        emit SponsorFeeBalanceChanged(
+            msg.sender,
+            previousBalance,
+            _serviceProviders[msg.sender].sponsorFeeBalance,
+            SponsorFeeAction.WITHDRAWAL
+        );
+    }
+
     /// @notice Checks if a Semaphore proof is valid
     /// @param groupId The ID of the group
     /// @param proof The Semaphore proof to verify
@@ -126,16 +163,35 @@ contract ServiceProvider is IServiceProvider {
     /// @notice Verifies an account using a Semaphore proof
     /// @param groupId The ID of the group
     /// @param proof The Semaphore proof for verification
-    function verifyAccount(uint256 groupId, SemaphoreProof calldata proof) external {
+    /// proof.scope is the serviceProviderId
+    /// proof.message is the user account ID relating to the service provider
+    function verifyAccount(uint256 groupId, SemaphoreProof calldata proof) external onlyGelatoRelay {
+        uint256 gelatoRelayFee = _getFee();
+        address serviceProvider = serviceProviderAddresses[proof.scope];
+        uint256 previousBalance = getSponsorFeeBalance(serviceProvider);
+        
+        if (previousBalance < gelatoRelayFee) {
+            revert ServiceProvider__InsufficientSponsorFeeBalance();
+        }
+
         if (!checkProof(groupId, proof)) {
             revert ServiceProvider__InvalidProof();
         }
 
         nullifiers[groupId][proof.nullifier] = true;
 
-        // proof.scope is the serviceProviderId
-        // proof.message is the accountId
         verifiedAccounts[proof.scope][proof.message] = true;
+
+        _serviceProviders[serviceProvider].sponsorFeeBalance -= gelatoRelayFee;
+        
+        emit SponsorFeeBalanceChanged(
+            serviceProvider,
+            previousBalance,
+            _serviceProviders[serviceProvider].sponsorFeeBalance,
+            SponsorFeeAction.FEE_PAYMENT
+        );
+
+        _transferRelayFee();
 
         emit AccountVerified(
             groupId,
@@ -176,6 +232,13 @@ contract ServiceProvider is IServiceProvider {
     /// @return bool indicating if the manager is approved
     function isApprovedManagerById(uint256 serviceProviderId, uint256 managerId) public view returns (bool) {
         return _serviceProviders[serviceProviderAddresses[serviceProviderId]].approvedManagers[managerId];
+    }
+
+    /// @notice Returns the current sponsor fee balance for a service provider
+    /// @param serviceProvider The address of the service provider
+    /// @return The current balance
+    function getSponsorFeeBalance(address serviceProvider) public view returns (uint256) {
+        return _serviceProviders[serviceProvider].sponsorFeeBalance;
     }
 
     /// @notice Hashes a message for proof verification

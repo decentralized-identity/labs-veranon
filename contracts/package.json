@@ -12,6 +12,7 @@
     "prettier": "prettier --write 'contracts/**/*.sol' 'test/**/*.ts'"
   },
   "devDependencies": {
+    "@gelatonetwork/relay-context": "^4.0.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-ignition": "^0.15.0",
