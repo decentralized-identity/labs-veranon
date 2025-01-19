@@ -14,14 +14,15 @@ The VerAnon Admin UI provides a web interface for manual protocol operations, se
 #### For Managers
 
 - Monitor group metrics and membership
-- Verify individual identity commitment status and addition dates
-- Process user requests through commitment management (add/remove/update)
-- View subscriber details and account information
-- Adjust fee structures
+- Add/Update/Remove members from a group
+- Verify individual identity commitment status and addition dates (todo)
+- View subscriber details and account information (todo)
+- Adjust fee structures (todo)
 
 #### For Service Providers
 
-- Track user verification status across account set
-- Adjust approved identity managers
-- Access account details including approved manager relationships
-- View and verify manager credentials and reputation
+- Adjust approved identity managers 
+- Deposit/Withdraw sponsor funds (todo)
+- Track user verification status across account set (todo)
+- Access account details including approved manager relationships (todo)
+- View and verify manager credentials and reputation (todo)

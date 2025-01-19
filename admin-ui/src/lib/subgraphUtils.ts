@@ -1,7 +1,6 @@
 import { request, gql } from 'graphql-request'
 import { Group } from '@semaphore-protocol/group'
-
-const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/97956/veranon-subgraph/v1.2.0'
+import { SUBGRAPH_URL } from '../constants/subgraph'
 
 const GROUP_MEMBERS_QUERY = gql`
   query GetGroupMembers($groupId: ID!) {
@@ -95,7 +94,7 @@ type ServiceProviderQueryResponse = {
   } | null
 }
 
-export class GroupUtils {
+export class SubgraphUtils {
   /**
    * Fetches all active members for a given group ID
    */

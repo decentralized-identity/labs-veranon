@@ -1,8 +1,8 @@
 import { useAccount } from 'wagmi'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { Skeleton } from "./ui/skeleton"
 import { RegisterServiceProvider } from "./service-provider/RegisterServiceProvider"
-import { GroupUtils } from "../lib/groupUtils"
+import { SubgraphUtils } from "../lib/subgraphUtils"
 import { useEffect, useState } from 'react'
 import { ServiceProviderOverview } from "./service-provider/ServiceProviderOverview"
 import { ManagerApproval } from "./service-provider/ManagerApproval"
@@ -26,7 +26,7 @@ export function ServiceProvider() {
     }
 
     try {
-      const { isServiceProvider, serviceProviderId } = await GroupUtils.isServiceProvider(address)
+      const { isServiceProvider, serviceProviderId } = await SubgraphUtils.isServiceProvider(address)
       setServiceProviderData({
         isRegistered: isServiceProvider,
         serviceProviderId: serviceProviderId

@@ -3,10 +3,10 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagm
 import { Button } from "../../ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
 import { Textarea } from "../../ui/textarea"
-import { CONTRACT_ADDRESSES } from "../../../contracts/addresses"
-import { abi } from "../../../contracts/artifacts/Manager.json"
+import { CONTRACT_ADDRESSES } from "../../../constants/addresses"
+import { CONTRACT_ABI } from "../../../lib/contractABIs"
 import { Check, Loader2 } from "lucide-react"
-import { GroupUtils } from "../../../lib/groupUtils"
+import { SubgraphUtils } from "../../../lib/subgraphUtils"
 
 export function AddMembers() {
   const { address } = useAccount()
@@ -28,7 +28,7 @@ export function AddMembers() {
       if (!address) return
       
       try {
-        const { isManager, groupId } = await GroupUtils.isManager(address)
+        const { isManager, groupId } = await SubgraphUtils.isManager(address)
         if (isManager && groupId) {
           setGroupId(groupId)
         }
@@ -55,7 +55,7 @@ export function AddMembers() {
       if (commitmentsList.length === 1) {
         writeContract({
           address: CONTRACT_ADDRESSES.MANAGER,
-          abi,
+          abi: CONTRACT_ABI.MANAGER,
           functionName: 'addMember',
           args: [BigInt(groupId), commitmentsList[0]],
           chain: null,
@@ -64,7 +64,7 @@ export function AddMembers() {
       } else if (commitmentsList.length > 1) {
         writeContract({
           address: CONTRACT_ADDRESSES.MANAGER,
-          abi,
+          abi: CONTRACT_ABI.MANAGER,
           functionName: 'addMembers',
           args: [BigInt(groupId), commitmentsList],
           chain: null,

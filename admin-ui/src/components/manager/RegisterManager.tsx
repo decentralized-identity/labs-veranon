@@ -1,8 +1,9 @@
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
-import { CONTRACT_ADDRESSES } from "../../contracts/addresses"
-import { abi } from "../../contracts/artifacts/Manager.json"
+import { CONTRACT_ADDRESSES } from "../../constants/addresses"
+import { CONTRACT_ABI } from "../../lib/contractABIs"
+import { useEffect } from 'react'
 
 type RegisterManagerProps = {
   onRegistrationComplete?: () => void;
@@ -16,15 +17,17 @@ export function RegisterManager({ onRegistrationComplete }: RegisterManagerProps
     hash,
   })
 
-  // Notify parent component when transaction is confirmed
-  if (isSuccess && onRegistrationComplete) {
-    onRegistrationComplete()
-  }
+  // Move this into a useEffect to handle the success case
+  useEffect(() => {
+    if (isSuccess && onRegistrationComplete) {
+      onRegistrationComplete()
+    }
+  }, [isSuccess, onRegistrationComplete])
 
   const handleRegister = () => {
     writeContract({
       address: CONTRACT_ADDRESSES.MANAGER,
-      abi,
+      abi: CONTRACT_ABI.MANAGER,
       functionName: 'register',
       args: [],
       chain: null,

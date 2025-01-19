@@ -3,10 +3,10 @@ import { useAccount, useReadContract, useWriteContract } from 'wagmi'
 import { Button } from "../../ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
 import { Textarea } from "../../ui/textarea"
-import { CONTRACT_ADDRESSES } from "../../../contracts/addresses"
-import { abi } from "../../../contracts/artifacts/Manager.json"
+import { CONTRACT_ADDRESSES } from "../../../constants/addresses"
+import { CONTRACT_ABI } from "../../../lib/contractABIs"
 import { Check, Loader2 } from "lucide-react"
-import { GroupUtils } from "../../../lib/groupUtils"
+import { SubgraphUtils } from "../../../lib/subgraphUtils"
 
 type ManagerData = {
   isRegistered: boolean;
@@ -20,7 +20,7 @@ export function RemoveMembers() {
   
   const { data: managerData } = useReadContract({
     address: CONTRACT_ADDRESSES.MANAGER,
-    abi,
+    abi: CONTRACT_ABI.MANAGER,
     functionName: 'managers',
     args: address ? [address] : undefined,
   }) as { data: ManagerData | undefined }
@@ -31,14 +31,14 @@ export function RemoveMembers() {
     if (!address || !commitment.trim() || !managerData?.groupId) return
 
     try {
-      const merkleProof = await GroupUtils.getMerkleProof(
+      const merkleProof = await SubgraphUtils.getMerkleProof(
         Number(managerData.groupId),
         commitment
       )
 
-      await writeContract({
+      writeContract({
         address: CONTRACT_ADDRESSES.MANAGER,
-        abi,
+        abi: CONTRACT_ABI.MANAGER,
         functionName: 'removeMember',
         args: [
           managerData.groupId,

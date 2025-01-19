@@ -1,8 +1,8 @@
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
-import { CONTRACT_ADDRESSES } from "../../contracts/addresses"
-import { abi } from "../../contracts/artifacts/ServiceProvider.json"
+import { CONTRACT_ADDRESSES } from "../../constants/addresses"
+import { CONTRACT_ABI } from "../../lib/contractABIs"
 import { Check, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 
@@ -46,7 +46,7 @@ export function RegisterServiceProvider({ onRegistrationComplete }: RegisterServ
   const handleRegister = () => {
     writeContract({
       address: CONTRACT_ADDRESSES.SERVICE_PROVIDER,
-      abi,
+      abi: CONTRACT_ABI.SERVICE_PROVIDER,
       functionName: 'register',
       args: [],
       chain: null,

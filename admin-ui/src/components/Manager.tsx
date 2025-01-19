@@ -2,10 +2,10 @@ import { useAccount } from 'wagmi'
 import { GroupOverview } from "./manager/GroupOverview"
 import { QuickActions } from "./manager/QuickActions"
 import { ActivityFeed } from "./manager/ActivityFeed"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card"
 import { Skeleton } from "./ui/skeleton"
 import { RegisterManager } from "./manager/RegisterManager"
-import { GroupUtils } from "../lib/groupUtils"
+import { SubgraphUtils } from "../lib/subgraphUtils"
 import { useEffect, useState, useCallback } from 'react'
 
 type ManagerData = {
@@ -26,7 +26,7 @@ export function Manager() {
     }
 
     try {
-      const { isManager, groupId } = await GroupUtils.isManager(address)
+      const { isManager, groupId } = await SubgraphUtils.isManager(address)
       setManagerData({
         isRegistered: isManager,
         groupId: groupId
@@ -44,9 +44,9 @@ export function Manager() {
     checkManagerStatus()
   }, [checkManagerStatus])
 
-  const handleRegistrationComplete = useCallback(() => {
+  const handleRegistrationComplete = useCallback(async () => {
     // Immediately check the subgraph when transaction is confirmed
-    checkManagerStatus()
+    await checkManagerStatus()
     
     // If we need the timeout later, we can uncomment this:
     // await new Promise(resolve => setTimeout(resolve, 5000))

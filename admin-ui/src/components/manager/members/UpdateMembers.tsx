@@ -3,10 +3,10 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagm
 import { Button } from "../../ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card"
 import { Textarea } from "../../ui/textarea"
-import { CONTRACT_ADDRESSES } from "../../../contracts/addresses"
-import { abi } from "../../../contracts/artifacts/Manager.json"
+import { CONTRACT_ADDRESSES } from "../../../constants/addresses"
+import { CONTRACT_ABI } from "../../../lib/contractABIs"
 import { Check, Loader2 } from "lucide-react"
-import { GroupUtils } from "../../../lib/groupUtils"
+import { SubgraphUtils } from "../../../lib/subgraphUtils"
 
 export function UpdateMembers() {
   const { address } = useAccount()
@@ -28,7 +28,7 @@ export function UpdateMembers() {
       if (!address) return
       
       try {
-        const { isManager, groupId } = await GroupUtils.isManager(address)
+        const { isManager, groupId } = await SubgraphUtils.isManager(address)
         if (isManager && groupId) {
           setGroupId(groupId)
         }
@@ -46,14 +46,14 @@ export function UpdateMembers() {
     if (!groupId || !oldCommitment.trim() || !newCommitment.trim()) return
 
     try {
-      const merkleProof = await GroupUtils.getMerkleProof(
+      const merkleProof = await SubgraphUtils.getMerkleProof(
         Number(groupId),
         oldCommitment
       )
 
       writeContract({
         address: CONTRACT_ADDRESSES.MANAGER,
-        abi,
+        abi: CONTRACT_ABI.MANAGER,
         functionName: 'updateMember',
         args: [
           BigInt(groupId),

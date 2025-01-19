@@ -3,8 +3,8 @@ import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Button } from "../ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
-import { CONTRACT_ADDRESSES } from "../../contracts/addresses"
-import { abi } from "../../contracts/artifacts/ServiceProvider.json"
+import { CONTRACT_ADDRESSES } from "../../constants/addresses"
+import { CONTRACT_ABI } from "../../lib/contractABIs"
 import { Check, Loader2 } from "lucide-react"
 
 export function ManagerApproval() {
@@ -24,7 +24,7 @@ export function ManagerApproval() {
     try {
       writeContract({
         address: CONTRACT_ADDRESSES.SERVICE_PROVIDER,
-        abi,
+        abi: CONTRACT_ABI.SERVICE_PROVIDER,
         functionName: 'setApprovedManager',
         args: [BigInt(managerId)],
         chain: null,

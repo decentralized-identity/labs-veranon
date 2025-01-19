@@ -1,8 +1,8 @@
-import { GroupUtils } from '../lib/groupUtils'
+import { SubgraphUtils } from './subgraphUtils'
 import { createPublicClient, http } from 'viem'
 import { polygonAmoy } from 'viem/chains'
-import { CONTRACT_ADDRESSES } from '../contracts/addresses'
-import { abi } from '../contracts/artifacts/Manager.json'
+import { CONTRACT_ADDRESSES } from '../constants/addresses'
+import { abi } from '../../../contracts/artifacts/contracts/Manager.sol/Manager.json'
 
 // Create a public client
 const publicClient = createPublicClient({
@@ -10,12 +10,18 @@ const publicClient = createPublicClient({
   transport: http()
 })
 
-async function testCreateGroup() {
-  const groupId = '1'
+async function getGroupRootAndMembers() {
+  // Get group ID from command line arguments
+  const groupId = process.argv[2] || '1' // Default to '1' if no argument provided
+  
+  if (!groupId.match(/^\d+$/)) {
+    console.error('Please provide a valid numeric group ID')
+    process.exit(1)
+  }
 
   try {
-    const group = await GroupUtils.createGroup(groupId)
-    // console.log('Group successfully assembled.')
+    const group = await SubgraphUtils.createGroup(groupId)
+    console.log('Group ID:', groupId)
     console.log('Computed Merkle Root:', group.root.toString())
 
     // Get on-chain merkle root, size, and member status
@@ -55,4 +61,4 @@ async function testCreateGroup() {
   }
 }
 
-testCreateGroup() 
+getGroupRootAndMembers() 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Users, Shield, ArrowLeftRight } from "lucide-react"
-import { GroupUtils } from "../../lib/groupUtils"
+import { SubgraphUtils } from "../../lib/subgraphUtils"
 
 type GroupOverviewProps = {
   groupId: number;
@@ -13,7 +13,7 @@ export function GroupOverview({ groupId }: GroupOverviewProps) {
   useEffect(() => {
     const fetchMemberCount = async () => {
       try {
-        const count = await GroupUtils.getActiveMemberCount(groupId)
+        const count = await SubgraphUtils.getActiveMemberCount(groupId)
         setMemberCount(count)
       } catch (error) {
         console.error('Error fetching member count:', error)
