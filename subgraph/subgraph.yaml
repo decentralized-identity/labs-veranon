@@ -8,9 +8,9 @@ dataSources:
     name: Manager
     network: polygon-amoy
     source:
-      address: "0x221D8e05eAE92e63d8C584d514e89733f4bEB52D"
+      address: "0x87fCD11dC167A78547669d4BAFcB0b549A314756"
       abi: Manager
-      startBlock: 16586441
+      startBlock: 17024464
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -21,10 +21,8 @@ dataSources:
         - MerkleTree
       abis:
         - name: Manager
-          file: ./abis/Manager.json
+          file: ../contracts/artifacts/contracts/Manager.sol/Manager.json
       eventHandlers:
-        # - event: GroupCreated(indexed uint256)
-        #   handler: createGroup
         - event: GroupAdminUpdated(indexed uint256,indexed address,indexed address)
           handler: updateGroupAdmin
         - event: MemberAdded(indexed uint256,uint256,uint256,uint256)
@@ -42,26 +40,24 @@ dataSources:
     name: ServiceProvider
     network: polygon-amoy
     source:
-      address: "0x05de354d56C83da8b46176a711E535040D68af86"
+      address: "0x624f574416F7eeA8552fBDAbd5bC347980d3E013"
       abi: ServiceProvider
-      startBlock: 16586441
+      startBlock: 17024464
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - AccountVerified
-        - ManagerApproved
-        - ServiceProviderRegistered
+        - ServiceProvider
+        - UserAccount
       abis:
         - name: ServiceProvider
-          file: ./abis/ServiceProvider.json
+          file: ../contracts/artifacts/contracts/ServiceProvider.sol/ServiceProvider.json
       eventHandlers:
-        - event: AccountVerified(indexed uint256,indexed uint256,indexed
-            uint256,uint256,uint256,uint256,uint256[8])
-          handler: handleAccountVerified
-        - event: ManagerApproved(indexed address,indexed uint256)
-          handler: handleManagerApproved
         - event: ServiceProviderRegistered(indexed uint256,indexed address)
           handler: handleServiceProviderRegistered
+        - event: AccountVerified(indexed uint256,indexed uint256,indexed uint256,uint256,uint256,uint256,uint256[8])
+          handler: handleAccountVerified
+        - event: SponsorFeeBalanceChanged(indexed address,uint256,uint256,uint8)
+          handler: handleSponsorFeeBalanceChanged
       file: ./src/service-provider.ts

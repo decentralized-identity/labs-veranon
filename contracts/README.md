@@ -9,7 +9,7 @@ yarn compile
 ## Deploy
 
 ```bash
-npx hardhat deploy:all \
+yarn hardhat deploy:all \
   --network amoy \
   --semaphore-verifier 0x6C42599435B82121794D835263C846384869502d \
   --poseidon 0xB43122Ecb241DD50062641f089876679fd06599a
@@ -18,8 +18,8 @@ npx hardhat deploy:all \
 ## Polygon Amoy Addresses
 
 ```
-Manager: 0x221D8e05eAE92e63d8C584d514e89733f4bEB52D
-ServiceProvider: 0x05de354d56C83da8b46176a711E535040D68af86
+Manager: 0x87fCD11dC167A78547669d4BAFcB0b549A314756
+ServiceProvider: 0x624f574416F7eeA8552fBDAbd5bC347980d3E013
 ```
 
 ## Test

@@ -170,6 +170,12 @@ describe("ServiceProvider", () => {
         const NATIVE_TOKEN = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
         const mockFee = ethers.parseEther("0.01");
 
+        const sponsorFeeAction = {
+            DEPOSIT: 0,
+            WITHDRAWAL: 1,
+            FEE_PAYMENT: 2
+        }
+
         // Helper function for verify account calls
         async function callVerifyAccount(proof: any, gId: bigint) {
             const functionData = serviceProviderContract.interface.encodeFunctionData(
@@ -370,7 +376,7 @@ describe("ServiceProvider", () => {
                     user1.address,
                     initialBalance,
                     initialBalance - mockFee,
-                    2 // Assuming FEE_PAYMENT is 2 in the enum
+                    sponsorFeeAction.FEE_PAYMENT
                 );
         });
 
@@ -394,7 +400,7 @@ describe("ServiceProvider", () => {
                     user1.address,
                     initialBalance,
                     finalBalance,
-                    0 // DEPOSIT = 0 in enum
+                    sponsorFeeAction.DEPOSIT
                 );
         });
 
@@ -416,7 +422,7 @@ describe("ServiceProvider", () => {
                     user1.address,
                     initialBalance,
                     finalBalance,
-                    1 // WITHDRAWAL = 1 in enum
+                    sponsorFeeAction.WITHDRAWAL
                 );
 
             // Verify ETH was actually transferred to user
