@@ -46,11 +46,11 @@ export function Manager() {
 
   const handleRegistrationComplete = useCallback(async () => {
     // Immediately check the subgraph when transaction is confirmed
-    await checkManagerStatus()
+    // await checkManagerStatus()
     
     // If we need the timeout later, we can uncomment this:
-    // await new Promise(resolve => setTimeout(resolve, 5000))
-    // checkManagerStatus()
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    checkManagerStatus()
   }, [checkManagerStatus])
 
   // Show connect wallet prompt if not connected

@@ -49,8 +49,8 @@ export function RegisterManager({ onRegistrationComplete }: RegisterManagerProps
           disabled={isPending || isConfirming}
           size="lg"
         >
-          {isPending ? 'Confirming Transaction...' : 
-           isConfirming ? 'Registering...' : 
+          {isPending ? 'Registering...' : 
+           isConfirming ? 'Confirming Transaction...' : 
            'Register Now'}
         </Button>
       </CardContent>

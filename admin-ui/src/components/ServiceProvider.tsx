@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { ServiceProviderOverview } from "./service-provider/ServiceProviderOverview"
 import { ManagerApproval } from "./service-provider/ManagerApproval"
 import { VerificationSearch } from "./service-provider/VerificationSearch"
+import { FeeManagement } from "./service-provider/FeeManagement"
 
 type ServiceProviderData = {
   isRegistered: boolean;
@@ -97,6 +98,7 @@ export function ServiceProvider() {
         <ManagerApproval />
         <VerificationSearch />
       </div>
+      <FeeManagement />
     </div>
   )
 } 
