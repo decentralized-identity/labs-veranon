@@ -51,6 +51,15 @@ const CHECK_SERVICE_PROVIDER_QUERY = gql`
   }
 `
 
+const SPONSOR_FEE_BALANCE_QUERY = gql`
+  query GetSponsorFeeBalance($serviceProviderId: ID!) {
+    serviceProvider(id: $serviceProviderId) {
+      id
+      sponsorFeeBalance
+    }
+  }
+`
+
 type GroupMember = {
   id: string
   index: number
@@ -91,6 +100,13 @@ type ServiceProviderQueryResponse = {
   serviceProvider: {
     id: string
     serviceProviderId: string
+  } | null
+}
+
+type SponsorFeeBalanceResponse = {
+  serviceProvider: {
+    id: string
+    sponsorFeeBalance: string
   } | null
 }
 
@@ -232,6 +248,34 @@ export class SubgraphUtils {
     } catch (error) {
       console.error('Error checking service provider status:', error)
       return { isServiceProvider: false }
+    }
+  }
+
+  /**
+   * Fetches the current sponsor fee balance for a service provider
+   * @param address Ethereum address of the service provider
+   * @returns The current balance in wei as a BigInt, or null if provider not found
+   */
+  static async getSponsorFeeBalance(address: string): Promise<bigint | null> {
+    try {
+      if (!address) {
+        return null
+      }
+
+      const data = await request<SponsorFeeBalanceResponse>(
+        SUBGRAPH_URL,
+        SPONSOR_FEE_BALANCE_QUERY,
+        { serviceProviderId: address.toLowerCase() }
+      )
+      
+      if (!data.serviceProvider) {
+        return null
+      }
+
+      return BigInt(data.serviceProvider.sponsorFeeBalance)
+    } catch (error) {
+      console.error('Error fetching sponsor fee balance:', error)
+      return null
     }
   }
 } 
