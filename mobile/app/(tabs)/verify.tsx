@@ -4,12 +4,21 @@ import { useRef, useState } from 'react';
 import { createWitnessInput } from '../../utils/createWitnessInput';
 import { witnessCalculatorCode } from '@/utils/witnessCalculator';
 import { groth16Prove } from '@iden3/react-native-rapidsnark';
+import { sendVerifyAccountRequest } from '../../utils/gelatoRelayRequest';
+import { packGroth16Proof } from "@zk-kit/utils";
+import { useTaskStatus } from '../../hooks/useGelatoTaskStatus';
+
+// Temp constants for testing
+const GROUP_ID = 1;
+const SERVICE_PROVIDER_ID = "1";
+const MESSAGE = "3";
 
 export default function Verify() {
   const webviewRef = useRef<WebView>(null);
-  const [witnessStatus, setWitnessStatus] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [zkeyFilePath, setZkeyFilePath] = useState<string>('');
+  const [merkleTreeDepth, setMerkleTreeDepth] = useState<number>(0);
+  const { verificationStatus, setVerificationStatus, pollTaskStatus } = useTaskStatus();
 
   const htmlContent = `
   <html>
@@ -67,14 +76,16 @@ export default function Verify() {
 
   const handleGenerateWitness = async () => {
     setIsLoading(true);
-    setWitnessStatus('Preparing witness data...');
 
     try {
-      // TODO: get scope and message from UI inputs
-      const scope = "2";
-      const message = "3";
-      const { wasmBase64, input, zkeyFilePath } = await createWitnessInput(scope, message);
+      const scope = SERVICE_PROVIDER_ID;
+      const message = MESSAGE;
+      const groupId = GROUP_ID;
+
+      const { wasmBase64, input, zkeyFilePath } = await createWitnessInput(scope, message, groupId);
+      
       setZkeyFilePath(zkeyFilePath);
+      setMerkleTreeDepth(input.merkleProofLength);
       
       // Serialize input for JavaScript
       const serializedInput = JSON.stringify(input, (_, value) => 
@@ -90,28 +101,46 @@ export default function Verify() {
       webviewRef.current?.injectJavaScript(injectedCode);
     } catch (error) {
       console.error('Error:', error);
-      const message = error instanceof Error ? error.message : 'Unknown error occurred';
-      setWitnessStatus('Error: ' + message);
       setIsLoading(false);
     }
   };
 
   const handleMessage = async (event: any) => {
     try {
-        const data = JSON.parse(event.nativeEvent.data);
+      const data = JSON.parse(event.nativeEvent.data);
         
-        if (data.witness) {
-            // Adjust path format for groth16Prove
-            const zkeyPath = zkeyFilePath.replace('file://', '');
-            const proof = await groth16Prove(zkeyPath, data.witness);
+      if (data.witness) {
+        // Adjust path format for groth16Prove
+        const zkeyPath = zkeyFilePath.replace('file://', '');
+        const snarkProof = await groth16Prove(zkeyPath, data.witness);
 
-            console.log("\nVerification Inputs:");
-            console.log("------------------------");
-            console.log("Proof:", JSON.stringify(JSON.parse(proof.proof), null, 2));
-            console.log("Public Signals:", JSON.stringify(JSON.parse(proof.pub_signals), null, 2));
-        }
+        const parsedProof = JSON.parse(snarkProof.proof);
+        const packedPoints = packGroth16Proof(parsedProof);
+        const publicSignals = JSON.parse(snarkProof.pub_signals);
+
+        const verifyParams = {
+          groupId: GROUP_ID,
+          proof: {
+            points: packedPoints,
+            merkleTreeRoot: publicSignals[0],
+            nullifier: publicSignals[1],
+            message: MESSAGE,
+            scope: SERVICE_PROVIDER_ID,
+            merkleTreeDepth: merkleTreeDepth
+          }
+        };
+
+        // Send verification request via Gelato
+        setVerificationStatus('Sending verification request...');
+        const { taskId } = await sendVerifyAccountRequest(verifyParams);
+        setVerificationStatus(`Request sent!`);
+
+        // Start polling for status
+        pollTaskStatus(taskId);
+      }
     } catch (error) {
-        console.error("Error:", error);
+      console.error("Error:", error);
+      setVerificationStatus('Verification failed: ' + (error as Error).message);
     }
     setIsLoading(false);
   };
@@ -137,13 +166,13 @@ export default function Verify() {
           } px-6 py-3 rounded-lg`}
         >
           <Text className="text-white font-semibold text-lg">
-            {isLoading ? 'Generating...' : 'Generate Witness'}
+            {isLoading ? 'Verifying...' : 'Verify Account'}
           </Text>
         </Pressable>
-        
-        {witnessStatus && (
-          <Text className="mt-4 text-gray-700">
-            {witnessStatus}
+
+        {verificationStatus && (
+          <Text className="mt-4 text-blue-600 font-medium">
+            {verificationStatus}
           </Text>
         )}
       </View>

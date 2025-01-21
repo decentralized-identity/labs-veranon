@@ -1,0 +1,1 @@
+export const POLYGON_AMOY = 80002;

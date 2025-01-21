@@ -17,6 +17,7 @@
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.5",
     "@expo/vector-icons": "^14.0.2",
+    "@gelatonetwork/relay-sdk": "^5.5.6",
     "@iden3/react-native-rapidsnark": "^0.0.1-beta.1",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/native": "^7.0.0",

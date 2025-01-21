@@ -21,9 +21,7 @@ type WitnessInput = {
     };
 }
 
-const GROUP_ID = 2;
-
-export async function createWitnessInput(scope: string, message: string): Promise<WitnessInput> {
+export async function createWitnessInput(scope: string, message: string, groupId: number): Promise<WitnessInput> {
     try {
         // Get identity from secure storage
         const storedIdentity = await SecureStore.getItemAsync(PRIVATE_KEY_KEY);
@@ -32,7 +30,7 @@ export async function createWitnessInput(scope: string, message: string): Promis
         }
         
         const identity = Identity.import(storedIdentity);
-        const group = await GroupUtils.createGroup(GROUP_ID);
+        const group = await GroupUtils.createGroup(groupId);
 
         const leafIndex = group.indexOf(identity.commitment);
         const merkleProof = group.generateMerkleProof(leafIndex);
