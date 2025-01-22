@@ -60,6 +60,14 @@ const SPONSOR_FEE_BALANCE_QUERY = gql`
   }
 `
 
+const VERIFIED_ACCOUNTS_COUNT_QUERY = gql`
+  query GetVerifiedAccountsCount($serviceProviderId: BigInt!) {
+    userAccounts(where: { serviceProviderId: $serviceProviderId }) {
+      id
+    }
+  }
+`
+
 type GroupMember = {
   id: string
   index: number
@@ -108,6 +116,10 @@ type SponsorFeeBalanceResponse = {
     id: string
     sponsorFeeBalance: string
   } | null
+}
+
+type VerifiedAccountsCountResponse = {
+  userAccounts: { id: string }[]
 }
 
 export class SubgraphUtils {
@@ -276,6 +288,32 @@ export class SubgraphUtils {
     } catch (error) {
       console.error('Error fetching sponsor fee balance:', error)
       return null
+    }
+  }
+
+  /**
+   * Gets the total number of verified accounts for a service provider
+   * @param serviceProviderId Numeric ID of the service provider
+   * @returns The number of verified accounts, or 0 if provider not found
+   */
+  static async getVerifiedAccountsCount(serviceProviderId: number): Promise<number> {
+    try {
+      if (!serviceProviderId) {
+        return 0
+      }
+
+      const data = await request<VerifiedAccountsCountResponse>(
+        SUBGRAPH_URL,
+        VERIFIED_ACCOUNTS_COUNT_QUERY,
+        { serviceProviderId }
+      )
+
+      console.log(data)
+      
+      return data.userAccounts.length
+    } catch (error) {
+      console.error('Error fetching verified accounts count:', error)
+      return 0
     }
   }
 } 

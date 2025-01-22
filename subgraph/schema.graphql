@@ -34,7 +34,6 @@ type ServiceProvider @entity {
   timestamp: BigInt!
   serviceProviderId: BigInt!
   sponsorFeeBalance: BigInt!
-  verifiedAccounts: [UserAccount!]! @derivedFrom(field: "serviceProvider")
 }
 
 type UserAccount @entity {
@@ -42,5 +41,5 @@ type UserAccount @entity {
   timestamp: BigInt!
   nullifier: BigInt!
   accountId: BigInt! # message from the proof
-  serviceProvider: ServiceProvider!
+  serviceProviderId: BigInt!
 }

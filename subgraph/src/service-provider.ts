@@ -33,20 +33,15 @@ export function handleServiceProviderRegistered(
 }
 
 export function handleAccountVerified(event: AccountVerifiedEvent): void {
-  const serviceProvider = ServiceProvider.load(event.params.scope.toString())
+  // Using nullifier as the ID for the user account
+  const userAccount = new UserAccount(event.params.nullifier.toHexString())
   
-  if (serviceProvider) {
-    // Create unique ID by combining serviceProviderId and message (account ID with service)
-    const accountId = event.params.scope.toString().concat("-").concat(event.params.message.toString())
-    const userAccount = new UserAccount(accountId)
-    
-    userAccount.timestamp = event.block.timestamp
-    userAccount.nullifier = event.params.nullifier
-    userAccount.accountId = event.params.message
-    userAccount.serviceProvider = serviceProvider.id
-    
-    userAccount.save()
-  }
+  userAccount.timestamp = event.block.timestamp
+  userAccount.nullifier = event.params.nullifier
+  userAccount.accountId = event.params.message
+  userAccount.serviceProviderId = event.params.scope
+  
+  userAccount.save()
 }
 
 export function handleSponsorFeeBalanceChanged(
@@ -55,7 +50,6 @@ export function handleSponsorFeeBalanceChanged(
   const serviceProvider = ServiceProvider.load(event.params.serviceProvider.toHexString())
   
   if (serviceProvider) {
-    // Update service provider balance
     serviceProvider.sponsorFeeBalance = event.params.newBalance
     serviceProvider.save()
   }
