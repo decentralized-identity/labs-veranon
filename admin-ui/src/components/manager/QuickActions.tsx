@@ -5,7 +5,7 @@ import { Link } from "react-router-dom"
 
 export function QuickActions() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-1 gap-8 mb-8">
       <Card>
         <CardHeader>
           <CardTitle>Member Management</CardTitle>
@@ -22,7 +22,7 @@ export function QuickActions() {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Group Management</CardTitle>
           <CardDescription>Transfer or update group settings</CardDescription>
@@ -30,7 +30,7 @@ export function QuickActions() {
         <CardContent>
           <Button variant="outline">Transfer Management</Button>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   )
 } 

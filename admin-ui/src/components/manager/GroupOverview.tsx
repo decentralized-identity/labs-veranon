@@ -30,7 +30,7 @@ export function GroupOverview({ groupId }: GroupOverviewProps) {
         <CardDescription>Group ID: {groupId}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-center gap-4 p-4 border rounded-lg">
             <Users className="h-8 w-8 text-muted-foreground" />
             <div>
@@ -47,13 +47,13 @@ export function GroupOverview({ groupId }: GroupOverviewProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 border rounded-lg">
+          {/* <div className="flex items-center gap-4 p-4 border rounded-lg">
             <ArrowLeftRight className="h-8 w-8 text-muted-foreground" />
             <div>
               <p className="text-2xl font-bold">N/A</p>
               <p className="text-sm text-muted-foreground">Pending Actions</p>
             </div>
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>

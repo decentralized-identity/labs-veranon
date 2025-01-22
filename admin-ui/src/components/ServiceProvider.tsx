@@ -94,11 +94,13 @@ export function ServiceProvider() {
   return (
     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <ServiceProviderOverview serviceProviderId={parseInt(serviceProviderData.serviceProviderId || '0')} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <div className="mb-8">
+        <FeeManagement />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <ManagerApproval />
         <VerificationSearch />
       </div>
-      <FeeManagement />
     </div>
   )
 } 

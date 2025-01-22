@@ -20,16 +20,6 @@ const GROUP_MEMBERS_QUERY = gql`
   }
 `
 
-const GROUP_MEMBER_COUNT_QUERY = gql`
-  query GetGroupMemberCount($groupId: ID!) {
-    group(id: $groupId) {
-      merkleTree {
-        size
-      }
-    }
-  }
-`
-
 const CHECK_MANAGER_QUERY = gql`
   query CheckManager($address: ID!) {
     manager(id: $address) {
@@ -83,14 +73,6 @@ type GroupQueryResponse = {
       depth: number
     }
     members: GroupMember[]
-  }
-}
-
-type GroupMemberCountResponse = {
-  group: {
-    merkleTree: {
-      size: number
-    }
   }
 }
 
@@ -307,8 +289,6 @@ export class SubgraphUtils {
         VERIFIED_ACCOUNTS_COUNT_QUERY,
         { serviceProviderId }
       )
-
-      console.log(data)
       
       return data.userAccounts.length
     } catch (error) {
