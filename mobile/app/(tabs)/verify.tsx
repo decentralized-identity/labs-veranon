@@ -1,16 +1,20 @@
-import { Text, View, Pressable } from 'react-native';
+import { Text, View, Pressable, TextInput } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useWitnessVerification } from '../../hooks/useWitnessVerification';
 import { getWitnessWebViewContent } from '@/utils/zkp/witnessWebView';
+import { useState } from 'react';
 
 export default function Verify() {
+  const [scope, setScope] = useState('');
+  const [message, setMessage] = useState('');
+
   const {
     webviewRef,
     isLoading,
     verificationStatus,
     handleGenerateWitness,
     handleMessage
-  } = useWitnessVerification();
+  } = useWitnessVerification({ scope, message });
 
   return (
     <View className="flex-1">
@@ -25,11 +29,27 @@ export default function Verify() {
       </View>
       
       <View className="flex-1 items-center justify-center bg-white">
+        <TextInput
+          value={scope}
+          onChangeText={setScope}
+          placeholder="Enter Service Provider ID"
+          className="w-64 p-3 mb-4 border border-gray-300 rounded-lg"
+          keyboardType="numeric"
+        />
+        
+        <TextInput
+          value={message}
+          onChangeText={setMessage}
+          placeholder="Enter Account ID"
+          className="w-64 p-3 mb-4 border border-gray-300 rounded-lg"
+          keyboardType="numeric"
+        />
+
         <Pressable
           onPress={handleGenerateWitness}
-          disabled={isLoading}
+          disabled={isLoading || !scope || !message}
           className={`${
-            isLoading ? 'bg-gray-400' : 'bg-blue-500 active:bg-blue-600'
+            isLoading || !scope || !message ? 'bg-gray-400' : 'bg-blue-500 active:bg-blue-600'
           } px-6 py-3 rounded-lg`}
         >
           <Text className="text-white font-semibold text-lg">

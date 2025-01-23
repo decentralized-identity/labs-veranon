@@ -6,12 +6,14 @@ import { sendVerifyAccountRequest } from '../utils/gelatoRelayRequest';
 import { packGroth16Proof } from "@zk-kit/utils";
 import { useTaskStatus } from './useGelatoTaskStatus';
 
-// Move constants to a config file later if needed
 const GROUP_ID = 1;
-const SERVICE_PROVIDER_ID = "1";
-const MESSAGE = "3";
 
-export function useWitnessVerification() {
+interface WitnessVerificationProps {
+  scope: string;
+  message: string;
+}
+
+export function useWitnessVerification({ scope, message }: WitnessVerificationProps) {
   const webviewRef = useRef<WebView>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [zkeyFilePath, setZkeyFilePath] = useState<string>('');
@@ -22,8 +24,6 @@ export function useWitnessVerification() {
     setIsLoading(true);
 
     try {
-      const scope = SERVICE_PROVIDER_ID;
-      const message = MESSAGE;
       const groupId = GROUP_ID;
 
       const { wasmBase64, input, zkeyFilePath } = await createWitnessInput(scope, message, groupId);
@@ -65,8 +65,8 @@ export function useWitnessVerification() {
             points: packedPoints,
             merkleTreeRoot: publicSignals[0],
             nullifier: publicSignals[1],
-            message: MESSAGE,
-            scope: SERVICE_PROVIDER_ID,
+            message: message,
+            scope: scope,
             merkleTreeDepth: merkleTreeDepth
           }
         };
