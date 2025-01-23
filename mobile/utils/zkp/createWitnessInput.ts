@@ -1,9 +1,9 @@
 import { Identity } from "@semaphore-protocol/identity"
-import { GroupUtils } from './groupUtils'
+import { GroupUtils } from '../groupUtils'
 import * as SecureStore from 'expo-secure-store';
 import { maybeGetSnarkArtifacts } from './getSnarkArtifacts';
 import { File } from 'expo-file-system/next';
-import { hash } from "./hash"
+import { hash } from "../hash"
 
 const PRIVATE_KEY_KEY = 'semaphore_private_key-1';
 
