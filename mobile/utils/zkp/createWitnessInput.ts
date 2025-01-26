@@ -4,8 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 import { maybeGetSnarkArtifacts } from './getSnarkArtifacts';
 import { File } from 'expo-file-system/next';
 import { hash } from "../hash"
-
-const PRIVATE_KEY_KEY = 'semaphore_private_key-1';
+import { IDENTITY_KEY } from '../../constants/identities';
 
 // Custom type for our witness generation needs
 type WitnessInput = {
@@ -24,7 +23,7 @@ type WitnessInput = {
 export async function createWitnessInput(scope: string, message: string, groupId: number): Promise<WitnessInput> {
     try {
         // Get identity from secure storage
-        const storedIdentity = await SecureStore.getItemAsync(PRIVATE_KEY_KEY);
+        const storedIdentity = await SecureStore.getItemAsync(IDENTITY_KEY);
         if (!storedIdentity) {
             throw new Error("No identity found in secure storage");
         }

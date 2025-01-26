@@ -1,7 +1,5 @@
 import { File, Directory, Paths } from 'expo-file-system/next';
-
-const BASE_URL = 'https://snark-artifacts.pse.dev';
-const PROJECT = 'semaphore';
+import { BASE_URL, PROJECT } from '../../constants/artifactUrl';
 
 interface ArtifactOptions {
     version?: string;
