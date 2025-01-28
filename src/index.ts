@@ -13,16 +13,6 @@ const database_name = 'identity_data'
 
 app.use(express.json());
 
-// Simple API key validation middleware
-const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const apiKey = req.headers['x-api-key'];
-  if (apiKey === process.env.API_KEY) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Unauthorized' });
-  }
-};
-
 // Admin key validation middleware
 const validateAdminKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const adminKey = req.headers['x-admin-key'];
@@ -33,7 +23,7 @@ const validateAdminKey = (req: express.Request, res: express.Response, next: exp
   }
 };
 
-app.post('/register-identity', validateApiKey, async (req, res) => {
+app.post('/register-identity', async (req, res) => {
   try {
     const { identityUrl, identityCommitment } = req.body;
     
