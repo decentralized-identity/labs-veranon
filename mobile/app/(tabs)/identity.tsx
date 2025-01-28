@@ -1,3 +1,4 @@
+import React from 'react';
 import { Text, View, Pressable, ScrollView, SafeAreaView, Modal } from "react-native";
 import { Identity } from "@semaphore-protocol/identity";
 import * as SecureStore from 'expo-secure-store';
