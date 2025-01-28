@@ -7,13 +7,6 @@ import { SERVICE_PROVIDER_ADDRESS, GELATO_FEE_TOKEN } from '../constants/address
 // Initialize Gelato Relay SDK
 const relay = new GelatoRelay();
 
-const gelatoApiKey = process.env.GELATO_API_KEY;
-
-// const iface = new ethers.Interface(ServiceProviderABI);
-// const verifyAccountFn = iface.getFunction('verifyAccount');
-// if (!verifyAccountFn) throw new Error('verifyAccount function not found in ABI');
-// console.log("Function selector:", verifyAccountFn.selector);
-
 export interface VerifyAccountParams {
   groupId: number;
   proof: {
@@ -49,9 +42,7 @@ export async function sendVerifyAccountRequest(
 
     // Send relay request
     const response = await relay.callWithSyncFee(
-      request,
-      undefined,
-      gelatoApiKey
+      request
     );
     
     return {

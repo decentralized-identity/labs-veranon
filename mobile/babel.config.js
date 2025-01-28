@@ -23,15 +23,7 @@ module.exports = function (api) {
             '@semaphore-protocol/utils/constants': './node_modules/@semaphore-protocol/utils/dist/lib.esm/constants.js'
           },
         },
-      ],
-      ["module:react-native-dotenv", {
-        "moduleName": "@env",
-        "path": ".env",
-        "blacklist": null,
-        "whitelist": null,
-        "safe": false,
-        "allowUndefined": true
-      }]
+      ]
     ],
   };
 };

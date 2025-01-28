@@ -3,7 +3,7 @@ import { useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Identity } from "@semaphore-protocol/identity";
 import { IDENTITY_KEY } from '../../constants/identities';
-import { MANAGER_API_URL, MANAGER_API_KEY } from '@env';
+import { MANAGER_API_URL } from '../../constants/serverUrls';
 
 export default function RegisterScreen() {
   const [identityUrl, setIdentityUrl] = useState('');
@@ -17,7 +17,6 @@ export default function RegisterScreen() {
         throw new Error('Manager API URL is not configured');
       }
 
-      // Get identity from secure storage
       const storedIdentity = await SecureStore.getItemAsync(IDENTITY_KEY);
       if (!storedIdentity) {
         throw new Error("No identity found in secure storage");
@@ -26,23 +25,22 @@ export default function RegisterScreen() {
       const identity = Identity.import(storedIdentity);
       const identityCommitment = identity.commitment.toString();
 
-      console.log('Making request with payload:', {
-        identityUrl,
-        identityCommitment: identityCommitment.substring(0, 20) + '...'
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(`${MANAGER_API_URL}/register-identity`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': MANAGER_API_KEY,
+          'Content-Type': 'application/json'
         },
-
         body: JSON.stringify({
           identityUrl,
           identityCommitment,
         }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -51,12 +49,14 @@ export default function RegisterScreen() {
 
       console.log('Identity registered successfully');
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error details:', {
-        message: (error as Error).message,
+        message: error.message,
       });
       
-      // You might want to show an error message to the user here
+      if (error.name === 'AbortError') {
+        console.error('Request timed out - server might be down');
+      }
     } finally {
       setIsLoading(false);
     }
