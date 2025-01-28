@@ -1,6 +1,9 @@
 import express from 'express';
 import knex from 'knex';
 import config from '../knexfile';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
