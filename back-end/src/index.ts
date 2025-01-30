@@ -4,16 +4,26 @@ import config from "../knexfile";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config();
 const app = express();
 const db = knex(config);
+app.use(cors());
 app.use(express.json());
 
 const SECRET_KEY = process.env.SECRET_KEY;
 
 if (!SECRET_KEY) {
     throw new Error('SECRET_KEY is not defined in environment variables');
+}
+
+declare global {
+    namespace Express {
+        interface Request {
+            user?: any;
+        }
+    }
 }
 
 // **User Registration**
@@ -26,11 +36,22 @@ app.post("/register", async (req: express.Request, res: express.Response): Promi
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await db('users').insert({
+        const [userId] = await db('users').insert({
             username,
             password: hashedPassword
+        }).returning('id');
+
+        // Generate token immediately after successful registration
+        const token = jwt.sign(
+            { userId: userId, username: username },
+            SECRET_KEY,
+            { expiresIn: "1h" }
+        );
+
+        res.status(201).json({
+            message: "User created successfully",
+            token: token
         });
-        res.status(201).json({ message: "User created successfully" });
     } catch (error: any) {
         if (error.code === 'SQLITE_CONSTRAINT') {
             res.status(400).json({ message: "Username already exists" });
@@ -67,8 +88,8 @@ app.post("/login", async (req: express.Request, res: express.Response): Promise<
     res.json({ token });
 });
 
-// **Protected Route**
-app.get("/protected", (req: express.Request, res: express.Response) => {
+// Authentication Middleware
+const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction): void => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
         res.status(401).json({ message: "Unauthorized" });
@@ -77,10 +98,17 @@ app.get("/protected", (req: express.Request, res: express.Response) => {
 
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
-        res.json({ message: "You have access!", user: decoded });
+        req.user = decoded;
+        next();
     } catch {
         res.status(403).json({ message: "Invalid token" });
+        return;
     }
+};
+
+// Protected Route using middleware
+app.get("/protected", authenticateToken, (req: express.Request, res: express.Response) => {
+    res.json({ message: "You have access!", user: req.user });
 });
 
 app.listen(3000, () => console.log("Server running on port 3000"));
