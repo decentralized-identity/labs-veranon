@@ -19,7 +19,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
           <Route
-            path="/dashboard"
+            path="/*"
             element={
               <ProtectedRoute>
                 <Dashboard />
