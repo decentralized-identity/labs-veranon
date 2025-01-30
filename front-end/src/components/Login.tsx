@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from '../contexts/AuthContext';
+import { BACKEND_URL } from '../constants/urls';
 
 export default function Login() {
   const { login } = useAuth();
@@ -22,7 +23,7 @@ export default function Login() {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:3000/login", {
+      const response = await fetch(`${BACKEND_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BACKEND_URL } from '../constants/urls';
 
 interface AuthContextType {
   token: string | null;
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!token) return;
 
       try {
-        const response = await fetch('http://localhost:3000/protected', {
+        const response = await fetch(`${BACKEND_URL}/protected`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
