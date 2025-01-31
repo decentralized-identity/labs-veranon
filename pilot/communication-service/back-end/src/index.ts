@@ -113,7 +113,6 @@ app.get("/protected", authenticateToken, (req: express.Request, res: express.Res
 
 app.get("/verify", authenticateToken, async (req: express.Request, res: express.Response): Promise<void> => {
     const subgraphService = new SubgraphService();
-
     const { serviceProviderId, accountId } = req.query;
 
     if (!serviceProviderId || !accountId) {
@@ -125,11 +124,35 @@ app.get("/verify", authenticateToken, async (req: express.Request, res: express.
     }
 
     try {
-        // Ensure proper type conversion
+        // Check if user is already verified in database
+        const user = await db('users')
+            .where('id', req.user.userId)
+            .first();
+
+        if (user?.verified) {
+            res.json({
+                isVerified: true,
+                verificationTime: user.verificationTime
+            });
+            return;
+        }
+
+
+        // If not verified in database, check subgraph
         const verificationStatus = await subgraphService.isUserAccountVerified(
             parseInt(serviceProviderId.toString()),
             parseInt(accountId.toString())
         );
+
+        if (verificationStatus.isVerified) {
+            // Update database with verification status
+            await db('users')
+                .where('id', req.user.userId)
+                .update({ 
+                    verified: true,
+                    verificationTime: verificationStatus.verificationTime
+                });
+        }
 
         res.json({
             isVerified: verificationStatus.isVerified,

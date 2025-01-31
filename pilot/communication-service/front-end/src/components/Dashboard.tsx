@@ -3,12 +3,13 @@ import Header from './Header';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ChatRoom from './ChatRoom';
 import AccountSettings from './AccountSettings';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BACKEND_URL } from '@/constants/urls';
 import { SERVICE_PROVIDER_ID } from '@/constants/ids';
 
 export default function Dashboard() {
-  const { isAuthenticated, checkVerification, token } = useAuth();
+  const { isAuthenticated, checkVerification, token, isVerified } = useAuth();
+  const [hasCheckedVerification, setHasCheckedVerification] = useState(false);
   
   useEffect(() => {
     const verifyAccount = async () => {
@@ -18,19 +19,24 @@ export default function Dashboard() {
         });
         
         const data = await response.json();
-        
         const userId = data.user.userId;
-
-        await checkVerification(SERVICE_PROVIDER_ID, userId);
+        
+        if (!isVerified && !hasCheckedVerification) {
+          await checkVerification(
+            SERVICE_PROVIDER_ID.toString(), 
+            userId.toString()
+          );
+          setHasCheckedVerification(true);
+        }
       } catch (error) {
         console.error('Error verifying account:', error);
       }
     };
 
-    if (isAuthenticated && token) {
+    if (isAuthenticated && token && !hasCheckedVerification) {
       verifyAccount();
     }
-  }, [isAuthenticated, token, checkVerification]);
+  }, [isAuthenticated, token, isVerified, hasCheckedVerification]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
