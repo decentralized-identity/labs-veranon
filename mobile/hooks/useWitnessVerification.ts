@@ -5,8 +5,7 @@ import { groth16Prove } from '@iden3/react-native-rapidsnark';
 import { sendVerifyAccountRequest } from '../utils/gelatoRelayRequest';
 import { packGroth16Proof } from "@zk-kit/utils";
 import { useTaskStatus } from './useGelatoTaskStatus';
-
-const GROUP_ID = 1;
+import { GROUP_ID } from '../constants/group';
 
 interface WitnessVerificationProps {
   scope: string;

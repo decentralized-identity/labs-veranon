@@ -3,9 +3,34 @@ import Header from './Header';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ChatRoom from './ChatRoom';
 import AccountSettings from './AccountSettings';
+import { useEffect } from 'react';
+import { BACKEND_URL } from '@/constants/urls';
+import { SERVICE_PROVIDER_ID } from '@/constants/ids';
 
 export default function Dashboard() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, checkVerification, token } = useAuth();
+  
+  useEffect(() => {
+    const verifyAccount = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/protected`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const data = await response.json();
+        
+        const userId = data.user.userId;
+
+        await checkVerification(SERVICE_PROVIDER_ID, userId);
+      } catch (error) {
+        console.error('Error verifying account:', error);
+      }
+    };
+
+    if (isAuthenticated && token) {
+      verifyAccount();
+    }
+  }, [isAuthenticated, token, checkVerification]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
