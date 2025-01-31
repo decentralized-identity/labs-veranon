@@ -106,6 +106,26 @@ const authenticateToken = (req: express.Request, res: express.Response, next: ex
     }
 };
 
+// Verification Middleware - to be used after authenticateToken
+const requireVerified = async (req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> => {
+    try {
+        const user = await db('users')
+            .where('id', req.user.userId)
+            .first();
+
+        if (!user?.verified) {
+            res.status(403).json({ message: "Account not verified" });
+            return;
+        }
+
+        next();
+    } catch (error) {
+        console.error('Verification check failed:', error);
+        res.status(500).json({ message: "Error checking verification status" });
+        return;
+    }
+};
+
 // Protected Route using middleware
 app.get("/protected", authenticateToken, (req: express.Request, res: express.Response) => {
     res.json({ user: req.user });
@@ -164,6 +184,39 @@ app.get("/verify", authenticateToken, async (req: express.Request, res: express.
             message: "Error checking verification status",
             isVerified: false 
         });
+    }
+});
+
+// Get messages
+app.get("/messages", authenticateToken, requireVerified, async (req: express.Request, res: express.Response): Promise<void> => {
+    try {
+        const messages = await db('messages')
+            .join('users', 'messages.user_id', 'users.id')
+            .select('messages.*', 'users.username')
+            .orderBy('messages.created_at', 'desc')
+            .limit(20);
+            
+        res.json(messages);
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).json({ message: "Error fetching messages" });
+    }
+});
+
+// Post message
+app.post("/messages", authenticateToken, requireVerified, async (req: express.Request, res: express.Response): Promise<void> => {
+    const { content } = req.body;
+    
+    try {
+        const [message] = await db('messages').insert({
+            user_id: req.user.userId,
+            content
+        }).returning(['id', 'content', 'created_at']);
+
+        res.status(201).json(message);
+    } catch (error) {
+        console.error('Error posting message:', error);
+        res.status(500).json({ message: "Error posting message" });
     }
 });
 

@@ -2,8 +2,14 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../constants/urls';
 
+interface User {
+  userId: number;
+  username: string;
+}
+
 interface AuthContextType {
   token: string | null;
+  user: User | null;
   login: (token: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
@@ -15,8 +21,10 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [user, setUser] = useState<User | null>(null);
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const navigate = useNavigate();
+
 
   const login = (newToken: string) => {
     localStorage.setItem('token', newToken);
@@ -44,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!response.ok) {
           logout();
         }
+        const data = await response.json();
+        setUser(data.user);
       } catch (error) {
         console.error('Token verification failed:', error);
         logout();
@@ -77,12 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ 
       token, 
+      user,
       login, 
       logout, 
       isAuthenticated: !!token,
       isVerified,
       checkVerification 
     }}>
+
       {children}
     </AuthContext.Provider>
   );
