@@ -2,11 +2,14 @@ import { Text, View, Pressable, TextInput } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useWitnessVerification } from '../../hooks/useWitnessVerification';
 import { getWitnessWebViewContent } from '@/utils/zkp/witnessWebView';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 
 export default function Verify() {
+  const params = useLocalSearchParams();
   const [scope, setScope] = useState('');
   const [message, setMessage] = useState('');
+  const [isPreFilled, setIsPreFilled] = useState(false);
 
   const {
     webviewRef,
@@ -15,6 +18,20 @@ export default function Verify() {
     handleGenerateWitness,
     handleMessage
   } = useWitnessVerification({ scope, message });
+
+  useEffect(() => {
+    const serviceProviderId = params.serviceProviderId as string;
+    const accountId = params.accountId as string;
+    
+    console.log("Received params:", { serviceProviderId, accountId });
+    
+    if (serviceProviderId && accountId) {
+      console.log("Setting scope and message");
+      setScope(serviceProviderId);
+      setMessage(accountId);
+      setIsPreFilled(true);
+    }
+  }, [params.serviceProviderId, params.accountId]);
 
   return (
     <View className="flex-1">
@@ -33,16 +50,22 @@ export default function Verify() {
           value={scope}
           onChangeText={setScope}
           placeholder="Enter Service Provider ID"
-          className="w-64 p-3 mb-4 border border-gray-300 rounded-lg"
+          className={`w-64 p-3 mb-4 border border-gray-300 rounded-lg ${
+            isPreFilled ? 'bg-gray-100' : ''
+          }`}
           keyboardType="numeric"
+          editable={!isPreFilled}
         />
         
         <TextInput
           value={message}
           onChangeText={setMessage}
           placeholder="Enter Account ID"
-          className="w-64 p-3 mb-4 border border-gray-300 rounded-lg"
+          className={`w-64 p-3 mb-4 border border-gray-300 rounded-lg ${
+            isPreFilled ? 'bg-gray-100' : ''
+          }`}
           keyboardType="numeric"
+          editable={!isPreFilled}
         />
 
         <Pressable
