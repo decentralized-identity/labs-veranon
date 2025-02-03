@@ -23,8 +23,6 @@ export default function Verify() {
     const serviceProviderId = params.serviceProviderId as string;
     const accountId = params.accountId as string;
     
-    console.log("Received params:", { serviceProviderId, accountId });
-    
     if (serviceProviderId && accountId) {
       console.log("Setting scope and message");
       setScope(serviceProviderId);

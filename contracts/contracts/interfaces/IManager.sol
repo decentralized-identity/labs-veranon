@@ -1,12 +1,15 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 interface IManager {
     error Manager__AlreadyRegistered();
     error Manager__NotRegistered();
+    error Manager__AlreadySealed();
+    error Manager__GroupHasBeenSealed(uint256 groupId);
 
     event ManagerRegistered(address indexed manager, uint256 indexed groupId);
     event RegistrationFeeUpdated(uint256 indexed groupId, uint256 fee);
+    event GroupSealed(uint256 indexed groupId);
 
     function groupCounter() external view returns (uint256);
     function getManagerAddress(uint256 groupId) external view returns (address);
@@ -30,5 +33,5 @@ interface IManager {
         uint256 identityCommitment,
         uint256[] calldata merkleProofSiblings
     ) external;
-
+    function sealGroup() external;
 }

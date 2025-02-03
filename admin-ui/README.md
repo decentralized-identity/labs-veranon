@@ -1,15 +1,14 @@
 # VerAnon Admin UI
 
-### Getting Started with Development
+### Usage
 
-```bash
-yarn install
-yarn dev
-```
+1. Install dependencies: `yarn install`
+2. Run the development server: `yarn dev`
 
 ### Purpose
 
 The VerAnon Admin UI provides a web interface for manual protocol operations, serving both Managers and Service Providers. While automated solutions may be preferred in production environments, this interface ensures direct protocol accessibility and operational visibility.
+
 
 #### For Managers
 
