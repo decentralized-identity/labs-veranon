@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 import {ISemaphoreVerifier} from "@semaphore-protocol/contracts/interfaces/ISemaphoreVerifier.sol";
@@ -8,8 +8,7 @@ import {MIN_DEPTH, MAX_DEPTH} from "@semaphore-protocol/contracts/base/Constants
 import {GelatoRelayContext} from "@gelatonetwork/relay-context/contracts/GelatoRelayContext.sol";
 
 /// @title ServiceProvider
-/// @notice Contract for managing service providers and verifying Semaphore proofs
-/// @dev Implements proof verification and account management for service providers
+/// @notice Service provider operation management and verifying Semaphore proofs for accounts 
 contract ServiceProvider is IServiceProvider, GelatoRelayContext {
     ISemaphoreVerifier public immutable verifier;
     IManager public immutable manager;
@@ -54,6 +53,12 @@ contract ServiceProvider is IServiceProvider, GelatoRelayContext {
     /// @notice Sets an approved manager for the service provider
     /// @param groupId The ID of the manager's group to approve
     function setApprovedManager(uint256 groupId) external payable onlyRegisteredServiceProvider {
+        // Get manager address and verify it exists
+        address managerAddress = manager.getManagerAddress(groupId);
+        if (managerAddress == address(0)) {
+            revert ServiceProvider__ManagerDoesNotExist();
+        }
+        
         // Check if manager is already approved
         if (_serviceProviders[msg.sender].approvedManagers[groupId]) {
             revert ServiceProvider__ManagerAlreadyApproved();
@@ -63,8 +68,6 @@ contract ServiceProvider is IServiceProvider, GelatoRelayContext {
         if (msg.value < requiredFee) {
             revert ServiceProvider__InsufficientFee();
         }
-
-        address managerAddress = manager.getManagerAddress(groupId);
         
         if (requiredFee > 0) {
             (bool success, ) = managerAddress.call{value: msg.value}("");

@@ -25,6 +25,7 @@ interface IServiceProvider {
     error ServiceProvider__InsufficientSponsorFeeBalance();
     error ServiceProvider__InsufficientSponsorFundsForWithdrawal();
     error ServiceProvider__WithdrawSponsorFundsFailed();
+    error ServiceProvider__ManagerDoesNotExist();
 
     event ServiceProviderRegistered(uint256 indexed serviceProviderId, address indexed serviceProvider);
     event ManagerApproved(address indexed serviceProvider, uint256 indexed groupId);

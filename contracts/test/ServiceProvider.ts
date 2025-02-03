@@ -98,14 +98,19 @@ describe("ServiceProvider", () => {
 
     describe("# manager approval", () => {
         let serviceProviderContract: ServiceProvider
+        let managerContract: Manager
         let user1: any
-        let managerId: number
+        let managerId: bigint
 
         beforeEach(async () => {
             const fixture = await loadFixture(deployServiceProviderFixture)
             serviceProviderContract = fixture.serviceProviderContract
+            managerContract = fixture.managerContract
             user1 = fixture.user1
-            managerId = 1
+
+            // Register the manager first
+            await managerContract.connect(user1).register()
+            managerId = await managerContract.getManagerGroupId(user1.address)
         })
 
         it("Should allow registered service provider to set approved manager", async () => {
