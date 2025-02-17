@@ -1,4 +1,4 @@
-import { Text, View, Pressable, TextInput, ScrollView } from 'react-native';
+import { Text, View, Pressable, ScrollView } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useWitnessVerification } from '../../hooks/useWitnessVerification';
 import { getWitnessWebViewContent } from '@/utils/zkp/witnessWebView';
@@ -45,16 +45,19 @@ export default function Verify() {
       
       <ScrollView
         contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
           padding: 24,
         }}
       >
-        <Text className="text-3xl font-bold mb-6 text-center">Verify Account</Text>
-
-        <Text className="text-lg mb-6">
-          Please enter a Service Provider ID and Account ID to verify your account.
+        <Text className="text-4xl font-extrabold text-center mb-2">
+          {params.applicationName}
+        </Text>
+        <Text className="text-xl text-center mb-6">
+          is requesting ID Verification
         </Text>
 
-        <Text className="text-sm font-medium mb-2 text-gray-700">Service Provider ID</Text>
+        {/* <Text className="text-sm font-medium mb-2 text-gray-700">Service Provider ID</Text>
         <TextInput
           value={scope}
           onChangeText={setScope}
@@ -76,7 +79,7 @@ export default function Verify() {
           }`}
           keyboardType="numeric"
           editable={!isPreFilled}
-        />
+        /> */}
 
         <Pressable
           onPress={handleGenerateWitness}

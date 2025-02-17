@@ -20,7 +20,7 @@ export default function AccountSettings() {
       const data = await response.json();
       const userId = data.user.userId;
       
-      const deepLink = `com.anonymous.veranonmobile://verify?serviceProviderId=${encodeURIComponent(SERVICE_PROVIDER_ID)}&accountId=${encodeURIComponent(userId)}`;
+      const deepLink = `com.anonymous.veranonmobile://verify?serviceProviderId=${encodeURIComponent(SERVICE_PROVIDER_ID)}&accountId=${encodeURIComponent(userId)}&applicationName=${encodeURIComponent('Chat App')}`;
       window.location.href = deepLink;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to get account ID');

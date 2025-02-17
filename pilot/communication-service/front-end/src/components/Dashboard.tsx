@@ -47,9 +47,12 @@ export default function Dashboard() {
       <Header />
       <main className="w-full pt-6">
         <Routes>
-          <Route path="chat" element={<ChatRoom />} />
-          <Route path="settings" element={<AccountSettings />} />
-          <Route path="/" element={<Navigate to="chat" replace />} />
+          <Route path="/dashboard/chat" element={<ChatRoom />} />
+          <Route path="/dashboard/settings" element={<AccountSettings />} />
+          <Route
+            path="/dashboard"
+            element={<Navigate to={isVerified ? "/dashboard/chat" : "/dashboard/settings"} replace />}
+          />
         </Routes>
       </main>
     </div>
