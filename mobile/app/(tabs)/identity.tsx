@@ -78,7 +78,7 @@ export default function IdentityScreen() {
                 </View>
               </View>
 
-              <View className="mb-6">
+              {/* <View className="mb-6">
                 <Text className="text-lg font-medium mb-2">Current Group Registrations:</Text>
                 <View className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <View className="flex-row justify-between items-center">
@@ -86,7 +86,7 @@ export default function IdentityScreen() {
                     <Text className="text-sm text-gray-500">Registered</Text>
                   </View>
                 </View>
-              </View>
+              </View> */}
             </>
           ) : (
             <Text className="text-lg mb-6 text-gray-600 italic">

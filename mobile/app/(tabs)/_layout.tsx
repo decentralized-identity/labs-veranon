@@ -1,10 +1,16 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Text, View } from 'react-native';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerTitle: () => (
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>VerAnon</Text>
+          </View>
+        ),
         tabBarActiveTintColor: '#3b82f6', // blue-500
         headerStyle: {
           backgroundColor: '#ffffff',
@@ -18,7 +24,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          tabBarLabel: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
               name={focused ? 'home' : 'home-outline'} 
@@ -31,7 +37,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="identity"
         options={{
-          title: 'Identity',
+          tabBarLabel: 'Identity',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
               name={focused ? 'person' : 'person-outline'} 
@@ -44,7 +50,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="register"
         options={{
-          title: 'Register',
+          tabBarLabel: 'Register',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
               name={focused ? 'add-circle' : 'add-circle-outline'} 
@@ -57,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="verify"
         options={{
-          title: 'Verify',
+          tabBarLabel: 'Verify',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons 
               name={focused ? 'checkmark-circle' : 'checkmark-circle-outline'} 
